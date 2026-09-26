@@ -63,23 +63,26 @@ antecipado depois da 3 se sobrar tempo, mas o teste final é com o app completo.
 **Notas:** o repositório Git local e o primeiro commit/push (`361b52a`, "criação do repositório") foram feitos por você; o conteúdo publicado é só `.gitignore`, `.nvmrc`, `plano.md`, a proposta e `docs/`. O backend fica no ar (`flask run`, porta 5000) para as próximas etapas; o preflight de `http://localhost:9999` **não** recebe `Access-Control-Allow-Origin` (controle negativo). A origem `http://localhost:8080` só precisa entrar no `CORS_ORIGINS` do backend na Etapa 10 (Docker).
 
 ## Etapa 1 — Configuração do projeto, client HTTP, tema, mocks e testes
+**Status: concluída em 2026-09-26** (spec: `docs/specs/2026-09-26-configuracao-do-projeto.md`).
 **Arquivos:** `package.json`, `vite.config.js`, `index.html`, `eslint.config.js`, `.env.example`, `src/main.jsx`, `src/App.jsx`, `src/theme.js`, `src/api/api.js`, `src/utils/formatar.js`, `src/mocks/` (handlers e servidor MSW), `src/setupTests.js`
 
-- [ ] Projeto Vite + React (JavaScript, `.jsx`) com `<html lang="pt-BR">` e título do app.
-- [ ] Dependências, cada uma justificada na spec: `react-router-dom`, `@tanstack/react-query`, `react-hook-form`, `zod`, `@hookform/resolvers`, `@mui/material`, `@emotion/react`, `@emotion/styled`, `recharts`; de desenvolvimento: `vitest`, `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`, `jsdom`, `msw`, `eslint` e plugins do React.
-- [ ] `.env.example` com `VITE_API_URL=http://localhost:5000/api`; leitura só por `import.meta.env.VITE_API_URL` (falha com mensagem clara se ausente).
-- [ ] `main.jsx` com os providers (`QueryClientProvider`, `ThemeProvider` + `CssBaseline`, `BrowserRouter`); `App.jsx` com as rotas da SPA em telas provisórias e página 404.
-- [ ] Tema do MUI em `theme.js` (paleta, tipografia, cores distinguíveis para o gráfico).
-- [ ] **Client HTTP** (`api.js`, `fetch`): base URL, `Authorization: Bearer`, JSON, timeout com `AbortController`, `204` sem corpo, erro tipado (`ErroApi` com `status`, `erro`, `detalhes`) e erro de rede distinto; `401` chama um callback de sessão expirada registrado pelo `AuthProvider` (exceto no login).
-- [ ] `utils/formatar.js`: reais (`Intl.NumberFormat pt-BR/BRL`), porcentagem, datas e leitura de número com vírgula decimal.
-- [ ] MSW com handlers baseados no contrato (auth, simulações, financiamentos, resultado, parcelas, índices) **incluindo os erros** (401, 404, 409, 422, 503), `null` nas séries, 204 sem corpo e envelope `itens`/`total`; usados nos testes e, opcionalmente, no `npm run dev:mock`.
-- [ ] Scripts: `dev`, `build`, `preview`, `lint`, `test`.
+- [x] Projeto Vite + React (JavaScript, `.jsx`) com `<html lang="pt-BR">` e título do app.
+- [x] Dependências, cada uma justificada na spec: `react-router-dom`, `@tanstack/react-query`, `react-hook-form`, `zod`, `@hookform/resolvers`, `@mui/material`, `@emotion/react`, `@emotion/styled`, `recharts`; de desenvolvimento: `vitest`, `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`, `jsdom`, `msw`, `eslint` e plugins do React.
+- [x] `.env.example` com `VITE_API_URL=http://localhost:5000/api`; leitura só por `import.meta.env.VITE_API_URL` (falha com mensagem clara se ausente).
+- [x] `main.jsx` com os providers (`QueryClientProvider`, `ThemeProvider` + `CssBaseline`, `BrowserRouter`); `App.jsx` com as rotas da SPA em telas provisórias e página 404.
+- [x] Tema do MUI em `theme.js` (paleta, tipografia, cores distinguíveis para o gráfico).
+- [x] **Client HTTP** (`api.js`, `fetch`): base URL, `Authorization: Bearer`, JSON, timeout com `AbortController`, `204` sem corpo, erro tipado (`ErroApi` com `status`, `erro`, `detalhes`) e erro de rede distinto; `401` chama um callback de sessão expirada registrado pelo `AuthProvider` (exceto no login).
+- [x] `utils/formatar.js`: reais (`Intl.NumberFormat pt-BR/BRL`), porcentagem, datas e leitura de número com vírgula decimal.
+- [x] MSW com handlers baseados no contrato (auth, simulações, financiamentos, resultado, parcelas, índices) **incluindo os erros** (401, 404, 409, 422, 503), `null` nas séries, 204 sem corpo e envelope `itens`/`total`; usados nos testes e, opcionalmente, no `npm run dev:mock`.
+- [x] Scripts: `dev`, `build`, `preview`, `lint`, `test`.
 
-**Validar:** `npm run dev` abre a SPA em `http://localhost:5173`; `npm run build`, `npm run lint` e `npm test` verdes; testes do client HTTP (token injetado, 401, 204, 422 com `detalhes`, falha de rede, timeout) com MSW.
+**Validado:** `npm run dev` abre a SPA em `http://localhost:5173`; `npm run build`, `npm run lint` e `npm test` verdes; testes do client HTTP (token injetado, 401, 204, 422 com `detalhes`, falha de rede, timeout) com MSW.
+**Notas:** todas as versões da spec instalaram sem recuo (Vite 8.3, Vitest 5.0, MUI 9.4, ESLint 10.11...); 324 testes em 15 arquivos, ~4 s; o `create-vite` 9.2 trouxe oxlint, então o ESLint foi configurado à mão. Diferenças em relação ao plano original: sem `dev:mock` (decisão 8 da spec); `lerNumero` devolve `{ valor, erro }` (para distinguir campo vazio de inválido); a captura das fixtures achou o caso "aporte insuficiente" e corrigiu o `CLAUDE.md` (no modo aporte, `alcanca_a_meta` só é falso quando `mes_da_meta` é `null`); o `EstadoApi` é temporário e sai na Etapa 2. Arquivos além dos previstos: `Raiz.jsx`, `queryClient.js`, `config.js`, `testUtils.jsx`, `mocks/{banco,sessao,validacao,erros,chamar,contrato}.js`, `components/EmConstrucao.jsx`.
 
 ## Etapa 2 — Autenticação: registro, login, sessão e rotas protegidas
 **Arquivos:** `src/auth/{AuthProvider,useAuth,RotaProtegida,tokenStorage}.jsx/js`, `src/api/auth.js`, `src/schemas/auth.js`, `src/pages/{Login,Registro}.jsx`, `src/components/{Layout,BarraSuperior}.jsx`
 
+- [ ] **Remover o `EstadoApi`** (indicador temporário da Etapa 1) e adaptar o `Layout` que já existe (barra superior; falta o nome do usuário e o logout); `Login` e `Registro` já existem como telas provisórias a substituir.
 - [ ] `AuthProvider` (Context): token, usuário, `entrar`, `sair`; espelha o token no **`sessionStorage`** (leituras/escritas em `try/catch`) e registra token e callback de 401 no client HTTP.
 - [ ] Ao iniciar com token guardado: validar com `GET /api/auth/perfil`; 401 descarta o token e vai ao login; enquanto valida, mostra carregamento (sem piscar a tela de login).
 - [ ] `RotaProtegida`: sem token → `/login`, lembrando a rota pedida para voltar depois do login.

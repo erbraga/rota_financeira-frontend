@@ -1,0 +1,66 @@
+{
+  "atualizado_em": "2026-01-15T10:00:00-03:00",
+  "desatualizado": false,
+  "descricao": "Taxa CDI anualizada, base 252",
+  "indice": "CDI",
+  "periodo": {
+    "fim": "2026-09-26",
+    "inicio": "2026-06-26"
+  },
+  "pontos": [
+    {
+      "data": "2026-09-09",
+      "valor": 13.9
+    },
+    {
+      "data": "2026-09-10",
+      "valor": 13.9
+    },
+    {
+      "data": "2026-09-11",
+      "valor": 13.9
+    },
+    {
+      "data": "2026-09-14",
+      "valor": 13.9
+    },
+    {
+      "data": "2026-09-15",
+      "valor": 13.9
+    },
+    {
+      "data": "2026-09-16",
+      "valor": 13.9
+    },
+    {
+      "data": "2026-09-17",
+      "valor": 13.65
+    },
+    {
+      "data": "2026-09-18",
+      "valor": 13.65
+    },
+    {
+      "data": "2026-09-21",
+      "valor": 13.65
+    },
+    {
+      "data": "2026-09-22",
+      "valor": 13.65
+    },
+    {
+      "data": "2026-09-23",
+      "valor": 13.65
+    },
+    {
+      "data": "2026-09-24",
+      "valor": 13.65
+    }
+  ],
+  "serie_sgs": 4389,
+  "sugestao": {
+    "data_referencia": "2026-09-24",
+    "valor": 13.65
+  },
+  "unidade": "% a.a."
+}

@@ -1,0 +1,10 @@
+{
+  "criado_em": "2026-01-15T10:00:00-03:00",
+  "id": 1,
+  "nome": "Carro de exemplo",
+  "prazo_meses_fundo": 36,
+  "taxa_fundo_rendimento": 12.0,
+  "taxa_ipca_projetada": 4.5,
+  "valor_entrada": 20000.0,
+  "valor_veiculo": 95000.0
+}

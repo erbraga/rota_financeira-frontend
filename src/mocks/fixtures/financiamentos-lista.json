@@ -1,0 +1,21 @@
+{
+  "itens": [
+    {
+      "id": 1,
+      "nome": "Banco Exemplo Price 48x",
+      "prazo_meses": 48,
+      "sistema_amortizacao": "PRICE",
+      "taxa_juros_mensal": 1.5,
+      "valor_entrada": 20000.0
+    },
+    {
+      "id": 2,
+      "nome": "Banco Exemplo SAC 36x",
+      "prazo_meses": 36,
+      "sistema_amortizacao": "SAC",
+      "taxa_juros_mensal": 1.3,
+      "valor_entrada": 25000.0
+    }
+  ],
+  "total": 2
+}

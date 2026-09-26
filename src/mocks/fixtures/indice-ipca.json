@@ -1,0 +1,62 @@
+{
+  "atualizado_em": "2026-01-15T10:00:00-03:00",
+  "desatualizado": false,
+  "descricao": "IPCA acumulado em 12 meses",
+  "indice": "IPCA",
+  "periodo": {
+    "fim": "2026-09-26",
+    "inicio": "2025-09-26"
+  },
+  "pontos": [
+    {
+      "data": "2025-10-01",
+      "valor": 4.68
+    },
+    {
+      "data": "2025-11-01",
+      "valor": 4.46
+    },
+    {
+      "data": "2025-12-01",
+      "valor": 4.26
+    },
+    {
+      "data": "2026-01-01",
+      "valor": 4.44
+    },
+    {
+      "data": "2026-02-01",
+      "valor": 3.81
+    },
+    {
+      "data": "2026-03-01",
+      "valor": 4.14
+    },
+    {
+      "data": "2026-04-01",
+      "valor": 4.39
+    },
+    {
+      "data": "2026-05-01",
+      "valor": 4.72
+    },
+    {
+      "data": "2026-06-01",
+      "valor": 4.64
+    },
+    {
+      "data": "2026-07-01",
+      "valor": 4.44
+    },
+    {
+      "data": "2026-08-01",
+      "valor": 4.22
+    }
+  ],
+  "serie_sgs": 13522,
+  "sugestao": {
+    "data_referencia": "2026-08-01",
+    "valor": 4.22
+  },
+  "unidade": "% a.a."
+}
