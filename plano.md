@@ -47,19 +47,20 @@ antecipado depois da 3 se sobrar tempo, mas o teste final é com o app completo.
 ---
 
 ## Etapa 0 — Preparação do repositório e ambiente
-**Spec:** `docs/specs/2026-09-26-preparacao-repositorio-ambiente.md`
+**Status: concluída em 2026-09-26** (spec: `docs/specs/2026-09-26-preparacao-repositorio-ambiente.md`).
 **Arquivos:** `.gitignore`, `.nvmrc`
 
-- [ ] `git init -b main` no diretório do frontend.
-- [ ] `.gitignore`: `node_modules/`, `dist/`, `coverage/`, `*.log`, `.env`, `.env.*` (menos `.env.example`), `.vscode/`, `.idea/`, `.DS_Store`, `/tmp`, a pasta **`api/`** (cópia de referência do backend, que não vai para o repositório) e, como no backend, `CLAUDE.md`, `.claude/` e `requisitos front-end.md`. Proposta, plano e `docs/` são publicados.
-- [ ] `.nvmrc` com `24` (Node 24 LTS; a Etapa 1 repete no `engines` do `package.json` e a Etapa 10 usa a mesma major no `Dockerfile`).
-- [ ] Repositório **público** vazio `erbraga/rota_financeira-frontend`, **criado por você** no GitHub (sem README, `.gitignore` nem licença); o Claude só liga o remoto (`git remote add origin ...`).
-- [ ] Backend local no ar para desenvolvimento: `docker start rota-financeira-db` (se parado) e `flask run` (porta 5000), com `CORS_ORIGINS` incluindo `http://localhost:5173` (já está no `.env` local do backend).
-- [ ] Conta de teste `teste@example.com` criada na API (Swagger ou `curl`); a senha não é escrita em nenhum arquivo do repositório.
-- [ ] Conferir o CORS com um preflight `OPTIONS` usando `Origin: http://localhost:5173`.
+- [x] `git init -b main` no diretório do frontend.
+- [x] `.gitignore`: `node_modules/`, `dist/`, `coverage/`, `*.log`, `.env`, `.env.*` (menos `.env.example`), `.vscode/`, `.idea/`, `.DS_Store`, `/tmp`, a pasta **`api/`** (cópia de referência do backend, que não vai para o repositório) e, como no backend, `CLAUDE.md`, `.claude/` e `requisitos front-end.md`. Proposta, plano e `docs/` são publicados.
+- [x] `.nvmrc` com `24` (Node 24 LTS; a Etapa 1 repete no `engines` do `package.json` e a Etapa 10 usa a mesma major no `Dockerfile`).
+- [x] Repositório **público** vazio `erbraga/rota_financeira-frontend`, **criado por você** no GitHub (sem README, `.gitignore` nem licença); o Claude só liga o remoto (`git remote add origin ...`).
+- [x] Backend local no ar para desenvolvimento: `docker start rota-financeira-db` (se parado) e `flask run` (porta 5000), com `CORS_ORIGINS` incluindo `http://localhost:5173` (já está no `.env` local do backend).
+- [x] Conta de teste `teste@example.com` criada na API (Swagger ou `curl`); a senha não é escrita em nenhum arquivo do repositório.
+- [x] Conferir o CORS com um preflight `OPTIONS` usando `Origin: http://localhost:5173`.
 - **Commits e push são seus, manualmente:** o Claude não executa `git add`, `commit` nem `push`. Sem `LICENSE` e sem `.gitattributes` (decisões do autor).
 
-**Validar:** `git remote -v` aponta para o repositório público; `git status --ignored` mostra `api/` ignorada e `git ls-files` (depois do seu primeiro `git add`) não lista `api/`, `.env*`, `CLAUDE.md` nem `.claude/`; `curl http://localhost:5000/api/saude` responde 200; o preflight devolve `Access-Control-Allow-Origin: http://localhost:5173`; login da conta de teste responde 200.
+**Validado:** `git remote -v` aponta para o repositório público; `git status --ignored` mostra `api/` ignorada e `git ls-files` (depois do seu primeiro `git add`) não lista `api/`, `.env*`, `CLAUDE.md` nem `.claude/`; `curl http://localhost:5000/api/saude` responde 200; o preflight devolve `Access-Control-Allow-Origin: http://localhost:5173`; login da conta de teste responde 200.
+**Notas:** o repositório Git local e o primeiro commit/push (`361b52a`, "criação do repositório") foram feitos por você; o conteúdo publicado é só `.gitignore`, `.nvmrc`, `plano.md`, a proposta e `docs/`. O backend fica no ar (`flask run`, porta 5000) para as próximas etapas; o preflight de `http://localhost:9999` **não** recebe `Access-Control-Allow-Origin` (controle negativo). A origem `http://localhost:8080` só precisa entrar no `CORS_ORIGINS` do backend na Etapa 10 (Docker).
 
 ## Etapa 1 — Configuração do projeto, client HTTP, tema, mocks e testes
 **Arquivos:** `package.json`, `vite.config.js`, `index.html`, `eslint.config.js`, `.env.example`, `src/main.jsx`, `src/App.jsx`, `src/theme.js`, `src/api/api.js`, `src/utils/formatar.js`, `src/mocks/` (handlers e servidor MSW), `src/setupTests.js`

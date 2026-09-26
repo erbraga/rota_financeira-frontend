@@ -1,7 +1,7 @@
 # Preparação do repositório e ambiente (Etapa 0) — Spec
 
 **Criado em:** 2026-09-26
-**Status:** Aprovada (decisões 1 a 8 resolvidas em 2026-09-26)
+**Status:** Concluída em 2026-09-26 (decisões 1 a 8 resolvidas; critérios de aceite verificados)
 **Etapa do plano:** 0 (`plano.md`) · **Requisito:** R6
 
 ## Problema
@@ -107,24 +107,24 @@ Resolvidas em 2026-09-26 (decisões do autor):
 Sem decisões em aberto: a spec está pronta para o `/plan`.
 
 ## Critérios de aceite
-- [ ] `git -C <frontend> rev-parse --is-inside-work-tree` = `true`, na branch `main`.
-- [ ] `git remote -v` mostra `origin` = `https://github.com/erbraga/rota_financeira-frontend.git` e a URL abre,
+- [x] `git -C <frontend> rev-parse --is-inside-work-tree` = `true`, na branch `main`.
+- [x] `git remote -v` mostra `origin` = `https://github.com/erbraga/rota_financeira-frontend.git` e a URL abre,
       **sem login**, um repositório público no navegador (ou responde 200 na API pública do GitHub).
-- [ ] `git status --ignored` lista `api/` como ignorada; `git check-ignore -v api/README.md` e
+- [x] `git status --ignored` lista `api/` como ignorada; `git check-ignore -v api/README.md` e
       `git check-ignore -v .env` retornam a regra correspondente; `node_modules/` e `dist/` também são ignorados.
-- [ ] `git ls-files` (após o primeiro `git add`) **não** contém `api/`, `.env*` (exceto `.env.example`), senhas,
+- [x] `git ls-files` (após o primeiro `git add`) **não** contém `api/`, `.env*` (exceto `.env.example`), senhas,
       tokens nem os arquivos que a decisão 1 manda ignorar.
-- [ ] `.nvmrc` contém `24`, e `node -v` na pasta é `v24.x`.
-- [ ] `curl http://localhost:5000/api/saude` responde **200** (API e banco).
-- [ ] O preflight `curl -i -X OPTIONS -H "Origin: http://localhost:5173" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: content-type,authorization" http://localhost:5000/api/auth/login` devolve
+- [x] `.nvmrc` contém `24`, e `node -v` na pasta é `v24.x`.
+- [x] `curl http://localhost:5000/api/saude` responde **200** (API e banco).
+- [x] O preflight `curl -i -X OPTIONS -H "Origin: http://localhost:5173" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: content-type,authorization" http://localhost:5000/api/auth/login` devolve
       `Access-Control-Allow-Origin: http://localhost:5173`.
-- [ ] O registro e o login da conta de teste funcionam (`201` e `200` com `access_token`), e a senha **não** aparece
+- [x] O registro e o login da conta de teste funcionam (`201` e `200` com `access_token`), e a senha **não** aparece
       em nenhum arquivo do repositório (`grep -r` pela senha não encontra nada).
-- [ ] Nenhum arquivo do repositório do backend versionado foi alterado (`git status` limpo lá).
+- [x] Nenhum arquivo do repositório do backend versionado foi alterado (`git status` limpo lá).
 
 ## Plano de Implementação
 
-**Status:** aguardando aprovação · **Criado em:** 2026-09-26
+**Status:** executado em 2026-09-26 (T1 a T15) · **Criado em:** 2026-09-26
 
 Esta etapa não tem código de aplicação: são configuração do repositório e do ambiente. Cada tarefa indica **quem
 executa** (**Claude** ou **Você**), os arquivos afetados, o que muda e como validar. Regras que valem para todo o
@@ -228,4 +228,4 @@ O backend fica **no ar** ao final (a Etapa 1 e as seguintes precisam dele; me di
 - **Preflight falha só no navegador:** o `curl` não aplica a política de CORS, por isso a T9 testa com o cabeçalho `Origin` e com um controle negativo.
 
 ---
-*Plano aguardando aprovação. Nenhuma tarefa foi executada.*
+*Plano executado e verificado em 2026-09-26. Observação: o repositório Git local e o primeiro commit/push foram feitos pelo autor antes da T13 (o commit `361b52a` já continha os arquivos esperados); a atualização de status desta spec e do `plano.md` exige um novo commit do autor.*
