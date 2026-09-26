@@ -1,0 +1,26 @@
+# Dependências e artefatos de build
+node_modules/
+dist/
+coverage/
+*.log
+
+# Variáveis de ambiente (só o .env.example é versionado)
+.env
+.env.*
+!.env.example
+
+# IDE e sistema operacional
+.vscode/
+.idea/
+.DS_Store
+
+# Temporários
+/tmp
+
+# Cópia de referência do backend (nunca publicada neste repositório)
+api/
+
+# Arquivos de trabalho fora do repositório público (mesmo padrão do backend)
+.claude/
+CLAUDE.md
+requisitos front-end.md
