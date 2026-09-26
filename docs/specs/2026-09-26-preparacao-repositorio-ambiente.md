@@ -52,7 +52,8 @@ GitHub com o `.gitignore` correto, versão do Node fixada, e o backend local no 
    - dependências e artefatos: `node_modules/`, `dist/`, `coverage/`, `*.log`;
    - segredos: `.env`, `.env.*` com exceção `!.env.example`;
    - IDE/SO: `.vscode/`, `.idea/`, `.DS_Store`;
-   - **`api/`** (cópia de referência do backend, nunca publicada);
+   - **`/api/`** (cópia de referência do backend, nunca publicada; a barra inicial limita a regra à raiz: na versão
+     inicial, `api/` sem barra também ignorava `src/api/`, corrigido na Etapa 1);
    - `/tmp`;
    - arquivos de trabalho fora do público (decisão 1, como no backend): `CLAUDE.md`, `.claude/` e
      `requisitos front-end.md`.
@@ -229,3 +230,5 @@ O backend fica **no ar** ao final (a Etapa 1 e as seguintes precisam dele; me di
 
 ---
 *Plano executado e verificado em 2026-09-26. Observação: o repositório Git local e o primeiro commit/push foram feitos pelo autor antes da T13 (o commit `361b52a` já continha os arquivos esperados); a atualização de status desta spec e do `plano.md` exige um novo commit do autor.*
+
+**Correção posterior (Etapa 1):** a regra `api/` do `.gitignore` foi trocada por `/api/`, porque ignorava também `src/api/` (o client HTTP). O critério `git check-ignore -v api/README.md` continua valendo; passou a existir o controle `git check-ignore src/api/api.js` (não pode ser ignorado).

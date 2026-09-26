@@ -17,8 +17,9 @@ coverage/
 # Temporários
 /tmp
 
-# Cópia de referência do backend (nunca publicada neste repositório)
-api/
+# Cópia de referência do backend (nunca publicada neste repositório).
+# A barra inicial limita a regra à RAIZ: sem ela, src/api/ (o client HTTP) também seria ignorada.
+/api/
 
 # Arquivos de trabalho fora do repositório público (mesmo padrão do backend)
 .claude/

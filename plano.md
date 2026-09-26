@@ -51,7 +51,7 @@ antecipado depois da 3 se sobrar tempo, mas o teste final é com o app completo.
 **Arquivos:** `.gitignore`, `.nvmrc`
 
 - [x] `git init -b main` no diretório do frontend.
-- [x] `.gitignore`: `node_modules/`, `dist/`, `coverage/`, `*.log`, `.env`, `.env.*` (menos `.env.example`), `.vscode/`, `.idea/`, `.DS_Store`, `/tmp`, a pasta **`api/`** (cópia de referência do backend, que não vai para o repositório) e, como no backend, `CLAUDE.md`, `.claude/` e `requisitos front-end.md`. Proposta, plano e `docs/` são publicados.
+- [x] `.gitignore`: `node_modules/`, `dist/`, `coverage/`, `*.log`, `.env`, `.env.*` (menos `.env.example`), `.vscode/`, `.idea/`, `.DS_Store`, `/tmp`, a pasta **`/api/`** da raiz (cópia de referência do backend, que não vai para o repositório; a barra inicial é essencial, senão `src/api/` também seria ignorada) e, como no backend, `CLAUDE.md`, `.claude/` e `requisitos front-end.md`. Proposta, plano e `docs/` são publicados.
 - [x] `.nvmrc` com `24` (Node 24 LTS; a Etapa 1 repete no `engines` do `package.json` e a Etapa 10 usa a mesma major no `Dockerfile`).
 - [x] Repositório **público** vazio `erbraga/rota_financeira-frontend`, **criado por você** no GitHub (sem README, `.gitignore` nem licença); o Claude só liga o remoto (`git remote add origin ...`).
 - [x] Backend local no ar para desenvolvimento: `docker start rota-financeira-db` (se parado) e `flask run` (porta 5000), com `CORS_ORIGINS` incluindo `http://localhost:5173` (já está no `.env` local do backend).
