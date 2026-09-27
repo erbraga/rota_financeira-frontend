@@ -4,6 +4,8 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from '@mui/material/styles'
 import { render } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import AuthProvider from './auth/AuthProvider.jsx'
+import { gravarToken } from './auth/tokenStorage.js'
 import { criarQueryClient } from './queryClient.js'
 import { theme } from './theme.js'
 
@@ -20,4 +22,20 @@ export function renderizar(ui, { rota = '/', queryClient = criarQueryClientDeTes
       </ThemeProvider>
     </QueryClientProvider>,
   )
+}
+
+// Como renderizar(), mas com o AuthProvider (sessão). Se "token" for informado, ele já está guardado
+// (como depois de um login e um recarregamento). Devolve também o queryClient, para conferir o cache.
+export function renderizarComAuth(ui, { rota = '/', token, queryClient = criarQueryClientDeTeste() } = {}) {
+  if (token) gravarToken(token)
+  const resultado = render(
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider theme={theme}>
+        <MemoryRouter initialEntries={[rota]}>
+          <AuthProvider>{ui}</AuthProvider>
+        </MemoryRouter>
+      </ThemeProvider>
+    </QueryClientProvider>,
+  )
+  return { ...resultado, queryClient }
 }

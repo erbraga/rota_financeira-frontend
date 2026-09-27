@@ -62,12 +62,17 @@ export function validar(corpo, regras) {
     }
 
     if (tipo === 'texto' || tipo === 'email') {
-      if (typeof valor !== 'string') mensagem('Deve ser um texto.')
-      else if (valor.trim().length < min || valor.trim().length > max) {
-        mensagem(`Deve ter entre ${min} e ${max} caracteres.`)
-      } else if (tipo === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor.trim())) {
-        mensagem('E-mail inválido.')
-      } else dados[campo] = valor.trim()
+      // aparar: false preserva espaços (senha). mensagem/mensagemLongo/mensagemFormato imitam as do backend.
+      const texto = typeof valor === 'string' && regra.aparar !== false ? valor.trim() : valor
+      if (typeof valor !== 'string') {
+        mensagem(tipo === 'email' ? (regra.mensagemFormato ?? 'E-mail inválido.') : 'Deve ser um texto.')
+      } else if (texto.length > max && regra.mensagemLongo) {
+        mensagem(regra.mensagemLongo)
+      } else if (texto.length < min || texto.length > max) {
+        mensagem(regra.mensagem ?? `Deve ter entre ${min} e ${max} caracteres.`)
+      } else if (tipo === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(texto)) {
+        mensagem(regra.mensagemFormato ?? 'E-mail inválido.')
+      } else dados[campo] = texto
     } else if (tipo === 'sistema') {
       const maiusculo = typeof valor === 'string' ? valor.trim().toUpperCase() : ''
       if (maiusculo === 'PRICE' || maiusculo === 'SAC') dados[campo] = maiusculo
@@ -87,10 +92,43 @@ export function validar(corpo, regras) {
   return { dados, detalhes }
 }
 
+// Mensagens iguais às do backend real (conferidas em 2026-09-26).
+const EMAIL = {
+  campo: 'email',
+  tipo: 'email',
+  obrigatorio: true,
+  min: 1,
+  max: 254,
+  mensagem: 'E-mail inválido.',
+  mensagemLongo: 'O e-mail deve ter até 254 caracteres.',
+}
+
 export const regrasRegistro = [
-  { campo: 'nome', tipo: 'texto', obrigatorio: true, min: 2, max: 120 },
-  { campo: 'email', tipo: 'email', obrigatorio: true, min: 3, max: 254 },
-  { campo: 'senha', tipo: 'texto', obrigatorio: true, min: 8, max: 128 },
+  { campo: 'nome', tipo: 'texto', obrigatorio: true, min: 2, max: 120, mensagem: 'O nome deve ter entre 2 e 120 caracteres.' },
+  EMAIL,
+  {
+    campo: 'senha',
+    tipo: 'texto',
+    obrigatorio: true,
+    aparar: false,
+    min: 8,
+    max: 128,
+    mensagem: 'A senha deve ter entre 8 e 128 caracteres.',
+  },
+]
+
+// O login valida o formato do e-mail (como o backend) e só exige a senha (1 a 128 caracteres).
+export const regrasLogin = [
+  EMAIL,
+  {
+    campo: 'senha',
+    tipo: 'texto',
+    obrigatorio: true,
+    aparar: false,
+    min: 1,
+    max: 128,
+    mensagem: 'A senha deve ter de 1 a 128 caracteres.',
+  },
 ]
 
 export const regrasSimulacao = [

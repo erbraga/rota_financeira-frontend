@@ -275,7 +275,7 @@ Sem decisões em aberto: a spec está pronta para o `/plan`.
 
 ## Plano de Implementação
 
-**Status:** executado em 2026-09-26 (T1 a T25; T26 e T27 são do commit e da confirmação) · **Criado em:** 2026-09-26
+**Status:** executado em 2026-09-26 (T1 a T27) · **Criado em:** 2026-09-26
 
 São 27 tarefas pequenas, em blocos. Cada tarefa indica **quem executa** (**Claude** ou **Você**), os arquivos, o que
 muda e como validar. O código de cada módulo nasce **junto com os seus testes** (arquivos `*.test.js(x)` ao lado).
@@ -561,4 +561,5 @@ exige o navegador, e é sua.
 - **Descobertas de contrato** (já no `CLAUDE.md`): `sugestao` e `atualizado_em` anuláveis e `indice` em maiúsculas; `alcanca_a_meta` só é falso no modo aporte quando a meta não é atingida em 60 meses.
 - **Verificação no navegador (T24, pelo autor):** "API conectada" sem erro de CORS; rotas e recarga de rota interna; backend parado mostra "Sem conexão com o servidor"; sem `.env`, tela "Configuração ausente".
 - **Resíduo:** 2 contas descartáveis (`mock-...@example.com`) ficaram no banco de desenvolvimento do backend.
+- **Publicação (T26 e T27):** o primeiro push (`cfb2501`) saiu **sem `src/api/`**, porque a regra `api/` do `.gitignore` ignorava também essa pasta; corrigida para `/api/` e publicada em `a392936`. **Verificação do zero:** clone do repositório público numa pasta limpa, com `npm ci`, `npm ls`, `lint` (0 avisos), `test` (324 em 15 arquivos) e `build` verdes (62 arquivos em `src/`, URL da API embutida, sem `.env` nem `mockServiceWorker.js` no `dist/`).
 

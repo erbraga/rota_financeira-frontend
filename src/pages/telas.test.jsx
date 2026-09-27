@@ -2,9 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import Amortizacao from './Amortizacao.jsx'
-import Login from './Login.jsx'
 import NaoEncontrada from './NaoEncontrada.jsx'
-import Registro from './Registro.jsx'
 import Resultado from './Resultado.jsx'
 import SimulacaoForm from './SimulacaoForm.jsx'
 import Simulacoes from './Simulacoes.jsx'
@@ -22,8 +20,6 @@ function renderizar(caminhoRota, urlAtual, Tela) {
 
 describe('telas provisórias', () => {
   it.each([
-    ['/login', '/login', Login, 'Entrar'],
-    ['/registrar', '/registrar', Registro, 'Criar conta'],
     ['/simulacoes', '/simulacoes', Simulacoes, 'Minhas simulações'],
     ['/simulacoes/nova', '/simulacoes/nova', SimulacaoForm, 'Nova simulação'],
     ['/simulacoes/:id/editar', '/simulacoes/7/editar', SimulacaoForm, 'Editar simulação #7'],

@@ -374,3 +374,118 @@ describe('financiamentos', () => {
     }
   })
 })
+
+// Mensagens e comportamentos conferidos contra o backend REAL em 2026-09-26. Os literais abaixo são a
+// referência independente: se os mocks derivarem, estes testes falham.
+describe('autenticação: mensagens e regras iguais às do backend real', () => {
+  const REGISTRO_OK = { nome: 'Caio Souza', email: 'caio@example.com', senha: 'uma senha longa' }
+  const MSG_NOME = 'O nome deve ter entre 2 e 120 caracteres.'
+  const MSG_SENHA = 'A senha deve ter entre 8 e 128 caracteres.'
+  const MSG_SENHA_LOGIN = 'A senha deve ter de 1 a 128 caracteres.'
+  const MSG_EMAIL = 'E-mail inválido.'
+
+  const registrar = (corpo) => chamar('POST', '/auth/registrar', { corpo })
+  const entrar = (corpo) => chamar('POST', '/auth/login', { corpo })
+
+  describe('registro', () => {
+    it('mensagens exatas por campo', async () => {
+      const r = await registrar({ nome: 'A', email: 'nao-e-email', senha: 'curta' })
+      expect(r.status).toBe(422)
+      expect(r.corpo).toEqual({
+        erro: 'Dados inválidos',
+        detalhes: { nome: [MSG_NOME], email: [MSG_EMAIL], senha: [MSG_SENHA] },
+      })
+    })
+
+    it('nome com espaços nas pontas é aparado antes de contar (" A " é curto)', async () => {
+      const r = await registrar({ ...REGISTRO_OK, nome: ' A ' })
+      expect(r.corpo.detalhes.nome).toEqual([MSG_NOME])
+    })
+
+    it('limites do nome (2 e 120 valem; 1 e 121 não) e da senha (8 e 128 valem; 7 e 129 não)', async () => {
+      expect((await registrar({ ...REGISTRO_OK, email: 'a1@example.com', nome: 'Jo' })).status).toBe(201)
+      expect((await registrar({ ...REGISTRO_OK, email: 'a2@example.com', nome: 'n'.repeat(120) })).status).toBe(201)
+      expect((await registrar({ ...REGISTRO_OK, email: 'a3@example.com', senha: 'x'.repeat(8) })).status).toBe(201)
+      expect((await registrar({ ...REGISTRO_OK, email: 'a4@example.com', senha: 'x'.repeat(128) })).status).toBe(201)
+      expect((await registrar({ ...REGISTRO_OK, nome: 'n'.repeat(121) })).corpo.detalhes.nome).toEqual([MSG_NOME])
+      expect((await registrar({ ...REGISTRO_OK, senha: 'x'.repeat(7) })).corpo.detalhes.senha).toEqual([MSG_SENHA])
+      expect((await registrar({ ...REGISTRO_OK, senha: 'x'.repeat(129) })).corpo.detalhes.senha).toEqual([MSG_SENHA])
+    })
+
+    it('a senha NÃO é aparada: 8 espaços são uma senha válida', async () => {
+      const r = await registrar({ ...REGISTRO_OK, senha: '        ' })
+      expect(r.status).toBe(201)
+    })
+
+    it('e-mail com mais de 254 caracteres tem mensagem própria', async () => {
+      const r = await registrar({ ...REGISTRO_OK, email: `${'a'.repeat(250)}@b.co` })
+      expect(r.corpo.detalhes.email).toEqual(['O e-mail deve ter até 254 caracteres.'])
+    })
+
+    it('a validação (422) vem antes do conflito (409): e-mail existente com senha curta dá 422', async () => {
+      const r = await registrar({ nome: 'Outra Ana', email: 'ana@example.com', senha: 'curta' })
+      expect(r.status).toBe(422)
+      expect(r.corpo.detalhes.senha).toEqual([MSG_SENHA])
+      // Controle: com dados válidos, o mesmo e-mail dá 409.
+      expect((await registrar({ nome: 'Outra Ana', email: 'ana@example.com', senha: 'uma senha longa' })).status).toBe(409)
+    })
+  })
+
+  describe('login', () => {
+    it('valida o FORMATO do e-mail (422), como o backend real', async () => {
+      const r = await entrar({ email: 'nao-e-email', senha: 'x' })
+      expect(r.status).toBe(422)
+      expect(r.corpo).toEqual({ erro: 'Dados inválidos', detalhes: { email: [MSG_EMAIL] } })
+    })
+
+    it.each([
+      ['e-mail vazio', { email: '', senha: 'x' }, 'email', MSG_EMAIL],
+      ['e-mail que não é texto', { email: 123, senha: 'x' }, 'email', MSG_EMAIL],
+      ['senha vazia', { email: 'ana@example.com', senha: '' }, 'senha', MSG_SENHA_LOGIN],
+      ['senha com 129 caracteres', { email: 'ana@example.com', senha: 'x'.repeat(129) }, 'senha', MSG_SENHA_LOGIN],
+      ['campo desconhecido', { email: 'ana@example.com', senha: 'x', lembrar: true }, 'lembrar', 'Campo desconhecido.'],
+    ])('422 para %s', async (_rotulo, corpo, campo, mensagem) => {
+      const r = await entrar(corpo)
+      expect(r.status).toBe(422)
+      expect(r.corpo.detalhes[campo]).toEqual([mensagem])
+    })
+
+    it('a senha do login também não é aparada (espaços contam)', async () => {
+      const espacos = criarUsuario({ email: 'espacos@example.com', senha: '        ' })
+      const r = await entrar({ email: 'espacos@example.com', senha: '        ' })
+      expect(r.status).toBe(200)
+      expect(r.corpo.usuario.id).toBe(espacos.id)
+    })
+
+    it('e-mail válido com senha errada dá 401, não 422 (controle da validação de formato)', async () => {
+      const r = await entrar({ email: 'ana@example.com', senha: 'errada' })
+      expect(r.status).toBe(401)
+    })
+
+    it('o 401 do login NÃO traz WWW-Authenticate, mas o do perfil traz', async () => {
+      const login = await entrar({ email: 'ana@example.com', senha: 'errada' })
+      const perfil = await chamar('GET', '/auth/perfil')
+      expect(login.cabecalhos.get('WWW-Authenticate')).toBeNull()
+      expect(perfil.cabecalhos.get('WWW-Authenticate')).toBe('Bearer')
+    })
+  })
+
+  describe('cabeçalho Authorization', () => {
+    it.each([
+      ['Basic abc', 'Token de autenticação ausente'],
+      ['bearer abc', 'Token de autenticação ausente'],
+      ['Token abc', 'Token de autenticação ausente'],
+      ['Bearer', 'Token inválido'],
+      ['Bearer lixo', 'Token inválido'],
+    ])('"%s" -> 401 "%s"', async (cabecalho, mensagem) => {
+      const r = await chamar('GET', '/auth/perfil', { cabecalhos: { Authorization: cabecalho } })
+      expect(r.status).toBe(401)
+      expect(r.corpo).toEqual({ erro: mensagem })
+    })
+
+    it('"Bearer <token válido>" é aceito (controle)', async () => {
+      const r = await chamar('GET', '/auth/perfil', { cabecalhos: { Authorization: `Bearer ${tokenAna}` } })
+      expect(r.status).toBe(200)
+    })
+  })
+})

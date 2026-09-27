@@ -3,7 +3,7 @@ import { lerConfig } from '../../config.js'
 import { banco, criarUsuario, tokenDe, usuarioPublico } from '../banco.js'
 import { dadosInvalidos, respostaErro } from '../erros.js'
 import { autenticar } from '../sessao.js'
-import { lerCorpo, regrasRegistro, validar } from '../validacao.js'
+import { lerCorpo, regrasLogin, regrasRegistro, validar } from '../validacao.js'
 
 const { urlApi } = lerConfig()
 
@@ -28,15 +28,14 @@ export const handlersAuth = [
     const { corpo, resposta } = await lerCorpo(request)
     if (resposta) return resposta
 
-    const detalhes = {}
-    for (const campo of ['email', 'senha']) {
-      if (typeof corpo[campo] !== 'string' || corpo[campo] === '') detalhes[campo] = ['Campo obrigatório.']
-    }
+    const { dados, detalhes } = validar(corpo, regrasLogin)
     if (Object.keys(detalhes).length > 0) return dadosInvalidos(detalhes)
 
-    // Igual para e-mail inexistente e senha errada.
-    const usuario = banco.usuarios.find((u) => u.email === normalizar(corpo.email))
-    if (!usuario || usuario.senha !== corpo.senha) return respostaErro(401, 'Credenciais inválidas')
+    // Igual para e-mail inexistente e senha errada (e sem WWW-Authenticate, como o backend real).
+    const usuario = banco.usuarios.find((u) => u.email === normalizar(dados.email))
+    if (!usuario || usuario.senha !== dados.senha) {
+      return respostaErro(401, 'Credenciais inválidas', undefined, { semDesafio: true })
+    }
 
     return HttpResponse.json({
       access_token: tokenDe(usuario),

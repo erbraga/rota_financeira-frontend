@@ -1,9 +1,10 @@
 // Respostas de erro no formato do backend: { erro, detalhes? }. O 401 traz WWW-Authenticate: Bearer.
 import { HttpResponse } from 'msw'
 
-export function respostaErro(status, erro, detalhes) {
+// semDesafio: o 401 de "Credenciais inválidas" do login NÃO traz WWW-Authenticate no backend real.
+export function respostaErro(status, erro, detalhes, { semDesafio = false } = {}) {
   const corpo = detalhes ? { erro, detalhes } : { erro }
-  const headers = status === 401 ? { 'WWW-Authenticate': 'Bearer' } : undefined
+  const headers = status === 401 && !semDesafio ? { 'WWW-Authenticate': 'Bearer' } : undefined
   return HttpResponse.json(corpo, { status, headers })
 }
 

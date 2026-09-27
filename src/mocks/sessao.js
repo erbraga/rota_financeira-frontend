@@ -7,8 +7,10 @@ export function autenticar(request) {
   const cabecalho = request.headers.get('Authorization')
   if (!cabecalho) return { resposta: respostaErro(401, 'Token de autenticação ausente') }
 
+  // Como no backend: só o esquema exatamente "Bearer" conta; outro esquema (Basic, bearer, Token) é "ausente".
   const [tipo, token] = cabecalho.split(' ')
-  if (tipo !== 'Bearer' || !token) return { resposta: respostaErro(401, 'Token inválido') }
+  if (tipo !== 'Bearer') return { resposta: respostaErro(401, 'Token de autenticação ausente') }
+  if (!token) return { resposta: respostaErro(401, 'Token inválido') }
   if (token === TOKEN_EXPIRADO) return { resposta: respostaErro(401, 'Token expirado') }
 
   const achado = /^mock\.(\d+)$/.exec(token)

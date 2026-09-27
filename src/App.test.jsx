@@ -1,65 +1,78 @@
 import { screen } from '@testing-library/react'
-import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it } from 'vitest'
 import App from './App.jsx'
+import { criarUsuario, tokenDe } from './mocks/banco.js'
+import { handlers } from './mocks/handlers/index.js'
 import { servidor } from './mocks/servidor.js'
-import { renderizar } from './testUtils.jsx'
+import { renderizarComAuth } from './testUtils.jsx'
 
-const SAUDE = 'http://localhost:5000/api/saude'
+let token
 
 beforeEach(() => {
-  servidor.use(http.get(SAUDE, () => HttpResponse.json({ banco: 'ok', status: 'ok' })))
+  servidor.use(...handlers)
+  token = tokenDe(criarUsuario({ nome: 'Ana Souza', email: 'ana@example.com' }))
 })
 
-describe('rotas da SPA', () => {
+const h1 = (nome) => screen.findByRole('heading', { level: 1, name: nome })
+
+describe('rotas privadas (com sessão)', () => {
   it.each([
-    ['/login', 'Entrar'],
-    ['/registrar', 'Criar conta'],
     ['/simulacoes', 'Minhas simulações'],
     ['/simulacoes/nova', 'Nova simulação'],
     ['/simulacoes/1/editar', 'Editar simulação #1'],
     ['/simulacoes/1/resultado', 'Resultado da simulação #1'],
     ['/simulacoes/1/financiamentos/2', 'Amortização da opção #2'],
-  ])('%s mostra a tela provisória "%s"', async (rota, titulo) => {
-    renderizar(<App />, { rota })
-    expect(await screen.findByRole('heading', { level: 1, name: titulo })).toBeInTheDocument()
-    expect(screen.queryByText('Página não encontrada')).not.toBeInTheDocument()
-    await screen.findByText('API conectada')
+  ])('%s mostra "%s", dentro do layout com o nome do usuário e o Sair', async (rota, titulo) => {
+    renderizarComAuth(<App />, { rota, token })
+    expect(await h1(titulo)).toBeInTheDocument()
+    expect(screen.getByText('Ana Souza')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sair' })).toBeInTheDocument()
   })
 
   it('/ redireciona para as simulações', async () => {
-    renderizar(<App />, { rota: '/' })
-    expect(await screen.findByRole('heading', { level: 1, name: 'Minhas simulações' })).toBeInTheDocument()
-    await screen.findByText('API conectada')
+    renderizarComAuth(<App />, { rota: '/', token })
+    expect(await h1('Minhas simulações')).toBeInTheDocument()
+  })
+
+  it.each(['/login', '/registrar'])('%s redireciona quem já está logado para as simulações', async (rota) => {
+    renderizarComAuth(<App />, { rota, token })
+    expect(await h1('Minhas simulações')).toBeInTheDocument()
+  })
+})
+
+describe('rotas privadas (sem sessão)', () => {
+  it.each(['/simulacoes', '/simulacoes/nova', '/simulacoes/1/editar', '/simulacoes/1/resultado', '/simulacoes/1/financiamentos/1', '/'])(
+    '%s leva a /login, sem mostrar nada da área privada',
+    async (rota) => {
+      renderizarComAuth(<App />, { rota })
+      expect(await h1('Entrar')).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Sair' })).not.toBeInTheDocument()
+      expect(screen.queryByText('Minhas simulações')).not.toBeInTheDocument()
+    },
+  )
+})
+
+describe('rotas públicas', () => {
+  it.each([
+    ['/login', 'Entrar'],
+    ['/registrar', 'Criar conta'],
+  ])('%s abre sem sessão, no layout público (sem nome de usuário nem Sair)', async (rota, titulo) => {
+    renderizarComAuth(<App />, { rota })
+    expect(await h1(titulo)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Sair' })).not.toBeInTheDocument()
   })
 
   it.each(['/qualquer-coisa', '/simulacoes/1', '/simulacoes/1/financiamentos', '/login/extra'])(
     'rota desconhecida %s mostra a 404 da SPA',
     async (rota) => {
-      renderizar(<App />, { rota })
-      expect(await screen.findByRole('heading', { level: 1, name: 'Página não encontrada' })).toBeInTheDocument()
-      await screen.findByText('API conectada')
+      renderizarComAuth(<App />, { rota })
+      expect(await h1('Página não encontrada')).toBeInTheDocument()
     },
   )
 
-  it('toda tela aparece dentro do layout, com o nome do app e o estado da API', async () => {
-    renderizar(<App />, { rota: '/simulacoes' })
-    expect(screen.getByText('Rota Financeira')).toBeInTheDocument()
-    expect(screen.getByRole('main')).toHaveTextContent('Minhas simulações')
-    expect(await screen.findByText('API conectada')).toBeInTheDocument()
-  })
-
-  it('com a API fora do ar, mostra o aviso de rede e a SPA continua navegável', async () => {
-    servidor.use(http.get(SAUDE, () => HttpResponse.error()))
-    renderizar(<App />, { rota: '/simulacoes' })
-    expect(await screen.findByText('Sem conexão com o servidor')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 1, name: 'Minhas simulações' })).toBeInTheDocument()
-  })
-
-  it('com a API respondendo 503, mostra o erro da API e a SPA continua navegável', async () => {
-    servidor.use(http.get(SAUDE, () => HttpResponse.json({ erro: 'Banco indisponível' }, { status: 503 })))
-    renderizar(<App />, { rota: '/login' })
-    expect(await screen.findByText('Erro da API: Banco indisponível')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 1, name: 'Entrar' })).toBeInTheDocument()
+  it('a 404 é igual com sessão (no layout público, sem a barra do usuário)', async () => {
+    renderizarComAuth(<App />, { rota: '/qualquer-coisa', token })
+    expect(await h1('Página não encontrada')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Sair' })).not.toBeInTheDocument()
   })
 })

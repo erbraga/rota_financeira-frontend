@@ -1,27 +1,62 @@
-import { screen } from '@testing-library/react'
-import { http, HttpResponse } from 'msw'
+import { screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { Route, Routes } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { lerToken } from '../auth/tokenStorage.js'
+import { criarUsuario, tokenDe } from '../mocks/banco.js'
+import { handlers } from '../mocks/handlers/index.js'
 import { servidor } from '../mocks/servidor.js'
-import { renderizar } from '../testUtils.jsx'
+import { renderizarComAuth } from '../testUtils.jsx'
 import Layout from './Layout.jsx'
 
-describe('Layout', () => {
-  it('mostra a barra com o nome do app, o estado da API e a rota filha na área principal', async () => {
-    servidor.use(
-      http.get('http://localhost:5000/api/saude', () => HttpResponse.json({ banco: 'ok', status: 'ok' })),
-    )
-    renderizar(
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/teste" element={<p>Conteúdo da rota</p>} />
-        </Route>
-      </Routes>,
-      { rota: '/teste' },
-    )
+function Rotas() {
+  return (
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="/teste" element={<p>Conteúdo da rota</p>} />
+      </Route>
+    </Routes>
+  )
+}
 
-    expect(screen.getByText('Rota Financeira')).toBeInTheDocument()
+let ana
+
+beforeEach(() => {
+  servidor.use(...handlers)
+  ana = criarUsuario({ nome: 'Ana Souza', email: 'ana@example.com' })
+})
+
+describe('Layout (telas privadas)', () => {
+  it('mostra a barra com o nome do app, o nome do usuário, o Sair e a rota filha', async () => {
+    renderizarComAuth(<Rotas />, { rota: '/teste', token: tokenDe(ana) })
+    expect(await screen.findByText('Ana Souza')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sair' })).toBeInTheDocument()
     expect(screen.getByRole('main')).toHaveTextContent('Conteúdo da rota')
-    expect(await screen.findByText('API conectada')).toBeInTheDocument()
+  })
+
+  it('o nome do app é um link para /simulacoes', () => {
+    renderizarComAuth(<Rotas />, { rota: '/teste', token: tokenDe(ana) })
+    expect(screen.getByRole('link', { name: 'Rota Financeira' })).toHaveAttribute('href', '/simulacoes')
+  })
+
+  it('Sair encerra a sessão: apaga o token e avisa que saiu', async () => {
+    renderizarComAuth(<Rotas />, { rota: '/teste', token: tokenDe(ana) })
+    await screen.findByText('Ana Souza')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Sair' }))
+    await waitFor(() => expect(lerToken()).toBeNull())
+    expect(sessionStorage.getItem('rota-financeira.token')).toBeNull()
+  })
+
+  it('enquanto o usuário não chegou do perfil, não mostra nome (e não quebra)', () => {
+    renderizarComAuth(<Rotas />, { rota: '/teste', token: tokenDe(ana) })
+    expect(screen.queryByText('Ana Souza')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sair' })).toBeInTheDocument()
+  })
+
+  it('não existe mais o indicador temporário "API conectada"', async () => {
+    renderizarComAuth(<Rotas />, { rota: '/teste', token: tokenDe(ana) })
+    await screen.findByText('Ana Souza')
+    expect(screen.queryByText(/API conectada/)).not.toBeInTheDocument()
   })
 })
