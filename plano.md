@@ -188,7 +188,7 @@ dependem da 3 e podem trocar de ordem. O Dockerfile (10) só precisa de um build
 **Notas:** 1591 testes em 72 arquivos (eram 1517); nenhuma dependência nova nem ícone novo (continuam os 5). Bundle inicial de produção: ~768,8 kB (~244,7 kB gzip, index + o chunk pré-carregado), contra 1.162 kB (354 kB gzip) — queda de 34%; o Recharts só entra nos chunks que `Resultado`/`Amortizacao` referenciam (confirmado por grep no `dist/`). Achados da auditoria original (Chrome headless, 4 larguras, 10 telas): rolagem lateral no resultado e na amortização (o bug do `sx` `width: 1`), tela nova abrindo rolada ao navegar dentro do app, título da aba sempre igual, sem `ErrorBoundary`, contraste insuficiente do aviso de cache — todos corrigidos e reauditados. Lições de teste: MUI 9.4 não aceita mais `justifyContent`/`flexWrap` como prop direta do `Stack` (viram atributo DOM inválido; precisam ir em `sx`); `window.location.reload` é não configurável no jsdom (substituir o objeto inteiro via `vi.stubGlobal`); mockar um módulo real de página exigiria `vi.resetModules()`, que quebraria o contexto do `AuthProvider` já carregado por outros testes do mesmo arquivo — a divisão por rota foi testada com um harness (`React.lazy` controlado por uma "comporta" sobre o `Layout`/`ErrorBoundary`/`Suspense` reais) em vez de mockar `pages/Resultado.jsx`. Na auditoria em Chrome, interceptar uma resposta por *substring* do caminho intercepta também a navegação da própria SPA (mesma porta 5173): é preciso checar a origem completa (`http://localhost:5000/api/...`); e uma resposta interceptada sem cabeçalho `Access-Control-Allow-Origin` é bloqueada pelo navegador (vira erro de rede, não o erro de renderização que se queria forçar). Resíduo conhecido: durante a depuração do script de auditoria (seletores e condições de corrida), algumas contas `sonda-...@example.com` descartáveis ficaram sem simulação (falharam antes de criar uma) e a conta final usada terminou com 0 simulações, confirmado.
 
 ## Etapa 9 — Exportação por impressão (opcional)
-**Status: só se houver tempo, depois da Etapa 8.**
+**Status: pulada (decisão do autor, 2026-09-27).** Era opcional ("só se houver tempo"); o autor optou por seguir direto para a Etapa 10.
 **Arquivos:** `src/pages/Resultado.jsx`, `src/components/BotaoImprimir.jsx`, estilos `@media print` (no tema ou em `sx`)
 
 - [ ] Botão "Imprimir / salvar em PDF" (`window.print()`) na tela de resultado.
@@ -198,21 +198,23 @@ dependem da 3 e podem trocar de ordem. O Dockerfile (10) só precisa de um build
 **Validar:** pré-visualização de impressão do navegador (Chrome e Firefox) mostrando resultado legível em A4.
 
 ## Etapa 10 — Dockerfile (só `Dockerfile`, sem docker-compose)
+**Status: concluída em 2026-09-27** (spec: `docs/specs/2026-09-27-dockerfile.md`).
 **Arquivos:** `Dockerfile`, `nginx.conf`, `.dockerignore`
 
-- [ ] **Multi-stage:** estágio de build (`node`, `npm ci`, `npm run build`, `ARG VITE_API_URL`) e estágio final `nginx:alpine` servindo `dist/` na porta 80.
-- [ ] `nginx.conf` com **fallback de SPA** (qualquer rota → `index.html`), cache longo para os arquivos com hash em `assets/` e sem cache para o `index.html`; cabeçalhos básicos de segurança.
-- [ ] `.dockerignore`: `node_modules`, `dist`, `.env*`, `docs`, `api`, `*.md`, `.git`, `coverage`.
-- [ ] Sem segredos na imagem; a `VITE_API_URL` entra como `--build-arg` (o Vite a embute no build).
-- [ ] `HEALTHCHECK` simples (resposta 200 em `/`); usuário não-root se a imagem escolhida permitir.
-- [ ] Comandos documentados (para o README):
+- [x] **Multi-stage:** estágio de build (`node:24-alpine`, `npm ci`, `npm run build`, `ARG VITE_API_URL`) e estágio final `nginx:alpine` servindo `dist/`.
+- [x] `nginx.conf` com **fallback de SPA** (`try_files ... /index.html`), cache longo para os arquivos com hash em `assets/` e sem cache para o `index.html`; cabeçalhos básicos de segurança (repetidos em cada `location`, por causa de como o nginx herda `add_header`).
+- [x] `.dockerignore`: `node_modules`, `dist`, `.env*`, `docs`, `api`, `*.md`, `.git`, `.claude`, `coverage`.
+- [x] Sem segredos na imagem; a `VITE_API_URL` entra como `--build-arg` (o Vite a embute no build), só existe no estágio de build.
+- [x] Usuário não-root (`nginx`, já presente na imagem `nginx:alpine`): exigiu `chown` de `/var/cache/nginx` e `/run` no build (senão o processo não-root falha ao iniciar) e trocar a porta de 80 para **8080** (porta privilegiada exige root). **Sem `HEALTHCHECK`** — não estava na spec aprovada (diferença em relação ao esboço original desta linha no `plano.md`; sem impacto, não é requisito do trabalho).
+- [x] Comandos (documentados no próprio `Dockerfile` e a documentar de novo no README, Etapa 11):
 
 ```
 docker build --build-arg VITE_API_URL=http://localhost:5000/api -t rota-financeira-web .
-docker run -d --name rota-financeira-web -p 8080:80 rota-financeira-web
+docker run -d --name rota-financeira-web -p 8080:8080 rota-financeira-web
 ```
 
-**Validar:** `docker build` e `docker run`; abrir `http://localhost:8080`, **recarregar uma rota interna** (`/simulacoes`) para provar o fallback, e exercitar o fluxo completo (registrar → login → criar → opções → resultado → excluir) contra o backend, que precisa ter `http://localhost:8080` no `CORS_ORIGINS`. Conferir que a imagem não contém `.env` nem `node_modules`.
+**Validado:** `docker build` e `docker run` (pelo Claude, via Bash — Docker está disponível no ambiente); `http://localhost:8080/simulacoes` (rota que não existe como arquivo) devolve 200 com o mesmo `index.html` (fallback, sem precisar de navegador para provar); cabeçalhos de cache e segurança conferidos por `curl -I`; `nginx -t` e `whoami` (→ `nginx`) dentro do contêiner; busca por `node_modules`/`.env`/`src` na imagem não encontra nada. Você adicionou `http://localhost:8080` ao `CORS_ORIGINS` do backend (fora deste repositório) e verificou no navegador o fluxo completo (registrar → login → criar → opção → resultado → excluir) e o F5 numa rota interna — os dois funcionaram.
+**Notas:** achado real durante a T5: os cabeçalhos de segurança (`add_header`) somem se um `location` mais específico define os seus próprios `add_header` sem repetir os do nível `server` (o nginx não herda add_header parcialmente — é tudo ou nada por nível); corrigido repetindo os três cabeçalhos em cada `location`. Achado que virou pergunta ao autor antes de implementar: a spec previa porta 80 **e** usuário não-root juntos, o que não funciona por padrão na imagem `nginx:alpine` (falha ao criar `/var/cache/nginx/client_temp` e, mesmo corrigido isso, a porta 80 é privilegiada); decisão do autor: manter o usuário não-root e mover a porta interna para 8080 (o host continua publicando em 8080). Imagem final: ~95 MB em disco / ~26,7 MB de conteúdo.
 
 ## Etapa 11 — README com fluxograma da arquitetura
 **Arquivos:** `README.md`, `docs/img/arquitetura.dot` (ou outra fonte), `docs/img/arquitetura.png`, `docs/img/arquitetura.svg`
