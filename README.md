@@ -49,6 +49,11 @@ React 19 + Vite · React Router · TanStack Query (React Query) · React Hook Fo
 
 ## Instalação e execução local
 
+Os comandos abaixo são de
+**Linux/macOS (bash)**; no Windows, use o **WSL** ou siga apenas o caminho [Executar com Docker](#executar-com-docker),
+que não depende do shell.
+
+
 ```bash
 npm install
 cp .env.example .env
@@ -79,7 +84,7 @@ coloque um segredo nele — só a URL da API.
 | `npm test` | Roda a suíte de testes uma vez (Vitest). |
 | `npm run test:watch` | Roda a suíte em modo observador. |
 
-## Execução em Docker
+## Executar com Docker
 
 ```bash
 docker build --build-arg VITE_API_URL=http://localhost:5000/api -t rota-financeira-web .
