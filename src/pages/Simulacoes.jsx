@@ -96,7 +96,8 @@ export default function Simulacoes() {
 
       <ConfirmarExclusao
         aberto={dialogoAberto}
-        simulacao={alvo}
+        titulo={`Excluir a simulação "${alvo?.nome ?? ''}"?`}
+        descricao="As opções de financiamento dela também serão excluídas."
         carregando={excluir.isPending}
         erro={erroDaExclusao}
         aoCancelar={cancelar}

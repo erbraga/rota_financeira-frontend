@@ -37,6 +37,9 @@ export const handlersFinanciamentos = [
     return HttpResponse.json({ itens, total: itens.length })
   }),
 
+  // Não existe GET de uma opção só: no backend real o roteador responde 405 antes de qualquer autenticação.
+  http.get(`${urlApi}/simulacoes/:id/financiamentos/:fid`, () => respostaErro(405, 'Método não permitido')),
+
   // Ordem das verificações, como no backend: dono (404) -> corpo (400/415/422) -> estado (409).
   http.post(`${urlApi}/simulacoes/:id/financiamentos`, async ({ request, params }) => {
     const { usuario, resposta } = autenticar(request)

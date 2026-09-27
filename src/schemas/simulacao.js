@@ -3,16 +3,16 @@
 import { z } from 'zod'
 import { casasDecimais, dinheiroParaCampo, lerNumero, numeroParaCampo } from '../utils/formatar.js'
 
-const OBRIGATORIO = 'Campo obrigatório.'
+export const OBRIGATORIO = 'Campo obrigatório.'
 
 // Mensagens reais do backend (conferidas em 2026-09-26).
-const MSG_NOME = 'O nome deve ter entre 1 e 120 caracteres.'
+export const MSG_NOME = 'O nome deve ter entre 1 e 120 caracteres.'
 const MSG_VEICULO = 'O valor do veículo deve estar entre 0,01 e 9.999.999,00.'
 const MSG_ENTRADA = 'O valor da entrada deve estar entre 0,00 e 9.999.999,00.'
 const MSG_IPCA = 'A taxa de IPCA projetada deve estar entre -20 e 100.'
 const MSG_FUNDO = 'A taxa de rendimento do fundo deve estar entre 0 e 100.'
 const MSG_PRAZO = 'O prazo do fundo (em meses) deve estar entre 1 e 60.'
-const MSG_INTEIRO = 'Número inteiro inválido.'
+export const MSG_INTEIRO = 'Número inteiro inválido.'
 const MSG_ENTRADA_MAIOR = 'A entrada não pode ser maior que o valor do veículo.'
 
 // Nome dos campos do formulário -> chave da API (e o inverso, para os erros do servidor).
@@ -25,9 +25,9 @@ export const CAMPOS_DA_API = {
   prazo_meses_fundo: 'prazoMesesFundo',
 }
 
-// Campo numérico em texto. Ordem, igual à do backend: leitura -> inteiro -> faixa -> casas.
+// Campo numérico em texto (também usado pelo formulário das opções de financiamento). Ordem, igual à do backend: leitura -> inteiro -> faixa -> casas.
 // vazioVale: valor usado quando o campo está vazio (entrada = 0); sem ele, vazio é "Campo obrigatório.".
-function campoNumerico({ min, max, mensagemFaixa, casas, inteiro = false, vazioVale }) {
+export function campoNumerico({ min, max, mensagemFaixa, casas, inteiro = false, vazioVale }) {
   return z.string({ error: OBRIGATORIO }).superRefine((texto, ctx) => {
     const erro = (message) => ctx.addIssue({ code: 'custom', message })
     if (texto.trim() === '') {

@@ -43,6 +43,14 @@ describe('chavesSimulacoes', () => {
     expect(chavesSimulacoes.detalhe(7)).not.toEqual(chavesSimulacoes.detalhe(8))
     expect(chavesSimulacoes.lista).toEqual(['simulacoes'])
   })
+
+  it('opções e resultado começam pela chave do detalhe (excluir a simulação remove todas) e normalizam o id', () => {
+    expect(chavesSimulacoes.financiamentos(7)).toEqual(['simulacoes', '7', 'financiamentos'])
+    expect(chavesSimulacoes.financiamentos('7')).toEqual(chavesSimulacoes.financiamentos(7))
+    expect(chavesSimulacoes.resultado(7)).toEqual(['simulacoes', '7', 'resultado'])
+    expect(chavesSimulacoes.financiamentos(7)).not.toEqual(chavesSimulacoes.detalhe(7))
+    expect(chavesSimulacoes.financiamentos(7).slice(0, 2)).toEqual(chavesSimulacoes.detalhe(7))
+  })
 })
 
 describe('useSimulacoes', () => {

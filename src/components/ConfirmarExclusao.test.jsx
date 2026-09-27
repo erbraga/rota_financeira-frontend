@@ -3,13 +3,14 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import ConfirmarExclusao from './ConfirmarExclusao.jsx'
 
-const SIMULACAO = { id: 7, nome: 'Onix 2026' }
+const TITULO = 'Excluir a simulação "Onix 2026"?'
+const DESCRICAO = 'As opções de financiamento dela também serão excluídas.'
 
 function renderizar(props = {}) {
   const aoCancelar = vi.fn()
   const aoConfirmar = vi.fn()
   const resultado = render(
-    <ConfirmarExclusao simulacao={SIMULACAO} aberto aoCancelar={aoCancelar} aoConfirmar={aoConfirmar} {...props} />,
+    <ConfirmarExclusao titulo={TITULO} descricao={DESCRICAO} aberto aoCancelar={aoCancelar} aoConfirmar={aoConfirmar} {...props} />,
   )
   return { aoCancelar, aoConfirmar, ...resultado }
 }
@@ -20,11 +21,24 @@ describe('ConfirmarExclusao', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('aberto mostra o nome da simulação e o aviso de que as opções também serão apagadas e de que não há como desfazer', () => {
+  it('aberto mostra o título e o aviso de que as opções também serão apagadas e de que não há como desfazer', () => {
     renderizar()
     const dialogo = screen.getByRole('dialog', { name: 'Excluir a simulação "Onix 2026"?' })
     expect(dialogo).toHaveTextContent('As opções de financiamento dela também serão excluídas.')
     expect(dialogo).toHaveTextContent('Esta ação não pode ser desfeita.')
+  })
+
+  it('serve a outros recursos: título e texto de uma OPÇÃO de financiamento (nada da simulação aparece)', () => {
+    renderizar({ titulo: 'Excluir a opção "Banco A"?', descricao: undefined })
+    const dialogo = screen.getByRole('dialog', { name: 'Excluir a opção "Banco A"?' })
+    expect(dialogo).toHaveTextContent('Esta ação não pode ser desfeita.')
+    expect(dialogo).not.toHaveTextContent('As opções de financiamento dela')
+    expect(dialogo).not.toHaveTextContent('simulação')
+  })
+
+  it('com a descrição, ela vem antes de "Esta ação não pode ser desfeita." (controle)', () => {
+    renderizar({ titulo: 'Excluir a opção "Banco A"?', descricao: 'Ela deixa de entrar na comparação.' })
+    expect(screen.getByRole('dialog')).toHaveTextContent('Ela deixa de entrar na comparação. Esta ação não pode ser desfeita.')
   })
 
   it('Cancelar chama aoCancelar e NÃO confirma', async () => {

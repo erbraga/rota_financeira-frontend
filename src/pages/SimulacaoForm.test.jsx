@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { Route, Routes, useLocation, useNavigationType } from 'react-router-dom'
@@ -577,5 +577,161 @@ describe('SimulacaoForm: na edição a sugestão é só informação', () => {
     expect(await screen.findAllByText(/Não foi possível obter a sugestão do Banco Central agora/)).toHaveLength(2)
     await userEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }))
     expect(await screen.findByText('Alterações salvas.')).toBeInTheDocument()
+  })
+})
+
+// ---- Opções de financiamento na edição (Etapa 5) ------------------------------------------------------------------
+describe('SimulacaoForm: opções de financiamento', () => {
+  const salva = (dados = {}) =>
+    criarSimulacao(ana.id, { nome: 'Onix', valor_veiculo: 95000, valor_entrada: 20000, taxa_ipca_projetada: 4.5, taxa_fundo_rendimento: 12, prazo_meses_fundo: 36, ...dados })
+  const secao = () => screen.getByRole('heading', { level: 2, name: 'Opções de financiamento' })
+  const dialogo = () => screen.getByRole('dialog')
+  const opcoesNoBanco = (id) => banco.financiamentos.filter((f) => f.simulacao_id === id)
+
+  async function abrirEdicao(s = salva()) {
+    abrir(`/simulacoes/${s.id}/editar`)
+    await screen.findByRole('heading', { level: 1, name: 'Editar simulação' })
+    return s
+  }
+
+  async function adicionarOpcao(entrada = '10000') {
+    await userEvent.click(screen.getByRole('button', { name: 'Adicionar opção' }))
+    const d = within(dialogo())
+    await userEvent.type(d.getByLabelText('Nome da opção'), 'Banco A')
+    await userEvent.type(d.getByLabelText('Taxa de juros (% a.m.)'), '1,5')
+    await userEvent.type(d.getByLabelText('Prazo (meses)'), '48')
+    await userEvent.click(d.getByRole('radio', { name: 'Price' }))
+    await userEvent.clear(d.getByLabelText('Valor da entrada (R$)'))
+    await userEvent.type(d.getByLabelText('Valor da entrada (R$)'), entrada)
+    await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
+  }
+
+  it('a edição mostra a seção DEPOIS do formulário e dos botões da simulação (coluna única)', async () => {
+    await abrirEdicao()
+    const voltar = screen.getByRole('link', { name: 'Voltar ao histórico' })
+    const salvar = screen.getByRole('button', { name: 'Salvar alterações' })
+    for (const anterior of [voltar, salvar]) {
+      expect(anterior.compareDocumentPosition(secao()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    }
+    expect(await screen.findByText('Nenhuma opção ainda. Adicione ao menos 2 opções para comparar financiamentos.')).toBeInTheDocument()
+  })
+
+  it('a criação (/simulacoes/nova) NÃO mostra a seção (as opções precisam do id); controle: a edição mostra', async () => {
+    abrir('/simulacoes/nova')
+    await esperarSugestoes()
+    expect(screen.queryByRole('heading', { name: 'Opções de financiamento' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Adicionar opção' })).not.toBeInTheDocument()
+    expect(pedidos.filter((p) => p.endsWith('/financiamentos'))).toEqual([])
+  })
+
+  it('mostra as opções existentes e Ver resultado continua disponível com 0 opção', async () => {
+    const s = await abrirEdicao()
+    expect(screen.getByRole('link', { name: 'Ver resultado' })).toHaveAttribute('href', `/simulacoes/${s.id}/resultado`)
+    expect(screen.queryByRole('link', { name: 'Ver resultado' })).not.toHaveAttribute('aria-disabled')
+  })
+
+  it('lista as opções da simulação (e só dela)', async () => {
+    const s = salva()
+    criarFinanciamento(s.id, { nome: 'Banco A' })
+    criarFinanciamento(salva({ nome: 'Outra' }).id, { nome: 'De outra simulação' })
+    await abrirEdicao(s)
+    expect(await screen.findByRole('heading', { level: 3, name: 'Banco A' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 3, name: 'De outra simulação' })).not.toBeInTheDocument()
+  })
+
+  it('adicionar uma opção: aparece na lista, e a simulação NÃO recebe PUT (a opção é salva à parte)', async () => {
+    const s = await abrirEdicao()
+    await screen.findByText(/Nenhuma opção ainda/)
+    await adicionarOpcao()
+    expect(await screen.findByText('Opção adicionada.')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 3, name: 'Banco A' })).toBeInTheDocument()
+    expect(opcoesNoBanco(s.id)).toHaveLength(1)
+    expect(pedidos.filter((p) => p.startsWith('PUT '))).toEqual([])
+    expect(pedidos).toContain(`POST /simulacoes/${s.id}/financiamentos`)
+  })
+
+  it('o que foi digitado (e ainda não salvo) no formulário da simulação NÃO se perde ao adicionar, editar ou excluir uma opção', async () => {
+    const s = salva()
+    criarFinanciamento(s.id, { nome: 'Existente' })
+    await abrirEdicao(s)
+    await screen.findByRole('heading', { level: 3, name: 'Existente' })
+    await userEvent.clear(campo(R.nome))
+    await userEvent.type(campo(R.nome), 'Rascunho não salvo')
+    await userEvent.clear(campo(R.veiculo))
+    await userEvent.type(campo(R.veiculo), '80000')
+
+    await adicionarOpcao()
+    await screen.findByText('Opção adicionada.')
+    await userEvent.click(await screen.findByRole('button', { name: 'Editar opção Existente' }))
+    await userEvent.click(within(dialogo()).getByRole('button', { name: 'Salvar' }))
+    // Os avisos entram numa fila (um por vez): espera o diálogo fechar, não o texto do aviso.
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await userEvent.click(screen.getByRole('button', { name: 'Excluir opção Existente' }))
+    await userEvent.click(within(dialogo()).getByRole('button', { name: 'Excluir' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.queryByRole('heading', { level: 3, name: 'Existente' })).not.toBeInTheDocument())
+    expect(opcoesNoBanco(s.id).map((f) => f.nome)).toEqual(['Banco A'])
+
+    expect(campo(R.nome)).toHaveValue('Rascunho não salvo')
+    expect(campo(R.veiculo)).toHaveValue('80.000,00') // reformatado ao sair do campo, e ainda não salvo
+    expect(banco.simulacoes[0].nome).toBe('Onix') // nada foi salvo na simulação
+    expect(pedidos.filter((p) => p.startsWith('PUT /simulacoes/') && !p.includes('/financiamentos'))).toEqual([])
+  })
+
+  it('independentes: a lista com erro (503) não impede editar e salvar a simulação', async () => {
+    servidor.use(http.get(`${BASE}/simulacoes/:id/financiamentos`, () => respostaErro(503, 'Serviço indisponível')))
+    const s = await abrirEdicao()
+    expect(await screen.findByText('Não foi possível carregar as opções de financiamento')).toBeInTheDocument()
+    await userEvent.clear(campo(R.veiculo))
+    await userEvent.type(campo(R.veiculo), '80000,5')
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }))
+    expect(await screen.findByText('Alterações salvas.')).toBeInTheDocument()
+    expect(banco.simulacoes.find((x) => x.id === s.id).valor_veiculo).toBe(80000.5)
+  })
+
+  it('independentes: o PUT da simulação falhar (rede) não derruba a lista nem as ações das opções (controle do anterior)', async () => {
+    const s = salva()
+    criarFinanciamento(s.id, { nome: 'Banco A' })
+    servidor.use(http.put(`${BASE}/simulacoes/${s.id}`, () => HttpResponse.error()))
+    await abrirEdicao(s)
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }))
+    expect(await screen.findByText('Não foi possível falar com o servidor.')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: 'Banco A' })).toBeInTheDocument()
+    await adicionarOpcao()
+    expect(await screen.findByText('Opção adicionada.')).toBeInTheDocument()
+    expect(opcoesNoBanco(s.id)).toHaveLength(2)
+  })
+
+  it('salvar a simulação com o veículo menor ou igual à entrada de uma opção: 422 NO CAMPO DO VEÍCULO, com o nome da opção', async () => {
+    const s = salva()
+    criarFinanciamento(s.id, { nome: 'Banco X', valor_entrada: 50000 })
+    await abrirEdicao(s)
+    await screen.findByRole('heading', { level: 3, name: 'Banco X' })
+    await userEvent.clear(campo(R.veiculo))
+    await userEvent.type(campo(R.veiculo), '50000')
+    await userEvent.clear(campo(R.entrada))
+    await userEvent.type(campo(R.entrada), '0')
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }))
+    expect(await screen.findByText(/"Banco X" \(R\$ 50\.000,00\)\. Ajuste a opção antes\./)).toBeInTheDocument()
+    expect(campo(R.veiculo)).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByRole('heading', { level: 3, name: 'Banco X' })).toBeInTheDocument() // a opção segue lá
+  })
+
+  it('depois de salvar a simulação, o diálogo valida a entrada com o NOVO valor do veículo (no cliente, sem POST)', async () => {
+    const s = await abrirEdicao()
+    await screen.findByText(/Nenhuma opção ainda/)
+    await userEvent.clear(campo(R.veiculo))
+    await userEvent.type(campo(R.veiculo), '60000')
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }))
+    await screen.findByText('Alterações salvas.')
+
+    await adicionarOpcao('70000')
+    expect(
+      await within(dialogo()).findByText(
+        'A entrada deve ser menor que o valor do veículo (R$ 60.000,00); com a entrada igual ao valor não há o que financiar.',
+      ),
+    ).toBeInTheDocument()
+    expect(pedidos).not.toContain(`POST /simulacoes/${s.id}/financiamentos`)
+    expect(opcoesNoBanco(s.id)).toHaveLength(0)
   })
 })

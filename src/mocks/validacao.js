@@ -1,6 +1,6 @@
 // Validação de corpo dos mocks, no espírito do backend (campos obrigatórios, faixas, casas decimais,
-// campos desconhecidos rejeitados). As mensagens de auth e de simulação são as do backend real (conferidas em 2026-09-26);
-// as de financiamento ainda são aproximações (a Etapa 5 as confere).
+// campos desconhecidos rejeitados). As mensagens de auth, simulação, financiamento e do corpo (400/415) são as do
+// backend real (conferidas em 2026-09-26).
 import { respostaErro } from './erros.js'
 
 const ID_MAXIMO = 2_147_483_647
@@ -12,19 +12,22 @@ export function lerId(texto) {
   return id >= 1 && id <= ID_MAXIMO ? id : null
 }
 
+// O backend real dá a MESMA mensagem para JSON inválido, corpo vazio, `null` e `[]`.
+const MENSAGEM_CORPO_400 = () => respostaErro(400, 'Corpo da requisição deve ser um objeto JSON')
+
 // Devolve { corpo } ou { resposta } (415/400).
 export async function lerCorpo(request) {
   if (!(request.headers.get('Content-Type') ?? '').includes('application/json')) {
-    return { resposta: respostaErro(415, 'O corpo da requisição deve ser JSON (Content-Type: application/json)') }
+    return { resposta: respostaErro(415, 'Tipo de conteúdo não suportado') }
   }
   let corpo
   try {
     corpo = await request.json()
   } catch {
-    return { resposta: respostaErro(400, 'JSON inválido') }
+    return { resposta: MENSAGEM_CORPO_400() }
   }
   if (corpo === null || typeof corpo !== 'object' || Array.isArray(corpo)) {
-    return { resposta: respostaErro(400, 'O corpo da requisição deve ser um objeto JSON') }
+    return { resposta: MENSAGEM_CORPO_400() }
   }
   return { corpo }
 }
@@ -84,7 +87,7 @@ export function validar(corpo, regras) {
     } else if (tipo === 'sistema') {
       const maiusculo = typeof valor === 'string' ? valor.trim().toUpperCase() : ''
       if (maiusculo === 'PRICE' || maiusculo === 'SAC') dados[campo] = maiusculo
-      else mensagem('O sistema de amortização deve ser PRICE ou SAC.')
+      else mensagem(regra.mensagem ?? 'Sistema de amortização inválido. Use PRICE ou SAC.')
     } else if (tipo === 'inteiro' && !(typeof valor === 'number' && Number.isInteger(valor))) {
       // O prazo só vale como número inteiro JSON: "12" (texto) e 12.5 são recusados.
       mensagem('Número inteiro inválido.')
@@ -198,9 +201,40 @@ export const regrasSimulacao = [
 ]
 
 export const regrasFinanciamento = [
-  { campo: 'nome', tipo: 'texto', obrigatorio: true, min: 1, max: 120 },
-  { campo: 'taxa_juros_mensal', tipo: 'numero', obrigatorio: true, min: 0, max: 20, casas: 6 },
-  { campo: 'prazo_meses', tipo: 'inteiro', obrigatorio: true, min: 1, max: 72 },
-  { campo: 'sistema_amortizacao', tipo: 'sistema', obrigatorio: true },
-  { campo: 'valor_entrada', tipo: 'numero', min: 0, max: 9999999, casas: 2, padrao: 0 },
+  {
+    campo: 'nome',
+    tipo: 'texto',
+    obrigatorio: true,
+    min: 1,
+    max: 120,
+    mensagem: 'O nome deve ter entre 1 e 120 caracteres.',
+    mensagemTipo: 'Nome inválido.',
+  },
+  {
+    campo: 'taxa_juros_mensal',
+    tipo: 'numero',
+    obrigatorio: true,
+    min: 0,
+    max: 20,
+    casas: 6,
+    mensagem: 'A taxa de juros mensal deve estar entre 0 e 20.',
+  },
+  {
+    campo: 'prazo_meses',
+    tipo: 'inteiro',
+    obrigatorio: true,
+    min: 1,
+    max: 72,
+    mensagem: 'O prazo (em meses) deve estar entre 1 e 72.',
+  },
+  { campo: 'sistema_amortizacao', tipo: 'sistema', obrigatorio: true, mensagem: 'Sistema de amortização inválido. Use PRICE ou SAC.' },
+  {
+    campo: 'valor_entrada',
+    tipo: 'numero',
+    min: 0,
+    max: 9999999,
+    casas: 2,
+    padrao: 0,
+    mensagem: 'O valor da entrada deve estar entre 0,00 e 9.999.999,00.',
+  },
 ]

@@ -6,19 +6,21 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogContentText from '@mui/material/DialogContentText'
 import DialogTitle from '@mui/material/DialogTitle'
 
-// Confirmação antes de excluir uma simulação. Não conhece a API: recebe carregando/erro e chama aoCancelar/aoConfirmar.
+// Confirmação antes de excluir (uma simulação, uma opção de financiamento...). Não conhece a API nem o que está sendo
+// excluído: recebe o título e o texto complementar (`descricao`, opcional; "Esta ação não pode ser desfeita." vem sempre
+// depois), carregando/erro, e chama aoCancelar/aoConfirmar.
 // Durante a requisição os botões ficam desabilitados e Esc/clique fora não fecham (não dá para cancelar o que já foi).
-export default function ConfirmarExclusao({ simulacao, aberto, carregando = false, erro, aoCancelar, aoConfirmar }) {
+export default function ConfirmarExclusao({ titulo, descricao, aberto, carregando = false, erro, aoCancelar, aoConfirmar }) {
   function aoFechar() {
     if (!carregando) aoCancelar()
   }
 
   return (
     <Dialog open={aberto} onClose={aoFechar} aria-labelledby="titulo-exclusao" aria-describedby="texto-exclusao">
-      <DialogTitle id="titulo-exclusao">Excluir a simulação "{simulacao?.nome}"?</DialogTitle>
+      <DialogTitle id="titulo-exclusao">{titulo}</DialogTitle>
       <DialogContent>
         <DialogContentText id="texto-exclusao">
-          As opções de financiamento dela também serão excluídas. Esta ação não pode ser desfeita.
+          {descricao ? `${descricao} ` : ''}Esta ação não pode ser desfeita.
         </DialogContentText>
         {erro && (
           <Alert severity="error" sx={{ mt: 2 }}>

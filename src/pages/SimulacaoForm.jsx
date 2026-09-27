@@ -10,6 +10,7 @@ import { ehErroApi } from '../api/erros.js'
 import { useAviso } from '../avisos/useAviso.js'
 import EstadoErro from '../components/EstadoErro.jsx'
 import FormularioSimulacao from '../components/FormularioSimulacao.jsx'
+import SecaoFinanciamentos from '../components/SecaoFinanciamentos.jsx'
 import { useAtualizarSimulacao } from '../hooks/useAtualizarSimulacao.js'
 import { useCriarSimulacao } from '../hooks/useCriarSimulacao.js'
 import { useIndice } from '../hooks/useIndice.js'
@@ -99,7 +100,7 @@ function EsqueletoFormulario() {
 
 // /simulacoes/:id/editar: carrega por GET (que NÃO traz as opções), mostra o formulário preenchido e salva com um
 // PUT de corpo completo. Depois de salvar CONTINUA na tela (com o aviso), com Ver resultado e Voltar ao histórico
-// sempre visíveis.
+// sempre visíveis. Abaixo do formulário fica a seção das opções de financiamento (lista e formulário independentes).
 function EditarSimulacao({ id }) {
   const consulta = useSimulacao(id)
   const atualizar = useAtualizarSimulacao(id)
@@ -157,6 +158,8 @@ function EditarSimulacao({ id }) {
           </>
         }
       />
+      {/* As opções de financiamento só existem na edição (precisam do id) e são salvas na hora, à parte do formulário. */}
+      <SecaoFinanciamentos key={`financiamentos-${id}`} simulacaoId={id} valorVeiculo={consulta.data.valor_veiculo} />
     </Box>
   )
 }

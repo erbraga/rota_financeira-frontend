@@ -655,3 +655,162 @@ describe('simulações: 404, Location e PUT contra a entrada de uma opção (bac
     expect(ambas.corpo.detalhes.valor_veiculo[0]).toContain('"Banco A" (R$ 30.000,00)')
   })
 })
+
+// Mensagens e regras das opções de financiamento, copiadas do backend REAL (conta descartável, 2026-09-26).
+// A referência são estes literais, nunca o próprio handler.
+describe('financiamentos: mensagens e regras iguais às do backend real', () => {
+  let sim
+
+  beforeEach(() => {
+    sim = criarSimulacao(ana.id, { valor_veiculo: 95000 })
+  })
+
+  const url = (sufixo = '') => `/simulacoes/${sim.id}/financiamentos${sufixo}`
+  const enviar = (corpo, metodo = 'POST', sufixo = '') => chamar(metodo, url(sufixo), { token: tokenAna, corpo })
+
+  const NOME = 'O nome deve ter entre 1 e 120 caracteres.'
+  const TAXA = 'A taxa de juros mensal deve estar entre 0 e 20.'
+  const PRAZO = 'O prazo (em meses) deve estar entre 1 e 72.'
+  const SISTEMA = 'Sistema de amortização inválido. Use PRICE ou SAC.'
+  const ENTRADA = 'O valor da entrada deve estar entre 0,00 e 9.999.999,00.'
+  const ENTRADA_MAIOR =
+    'A entrada deve ser menor que o valor do veículo (R$ 95.000,00); com a entrada igual ao valor não há o que financiar.'
+
+  it.each([
+    ['nome vazio', { nome: '' }, 'nome', NOME],
+    ['nome com 121 caracteres', { nome: 'x'.repeat(121) }, 'nome', NOME],
+    ['nome que não é texto', { nome: 5 }, 'nome', 'Nome inválido.'],
+    ['taxa -0,01', { taxa_juros_mensal: -0.01 }, 'taxa_juros_mensal', TAXA],
+    ['taxa 20,01', { taxa_juros_mensal: 20.01 }, 'taxa_juros_mensal', TAXA],
+    ['taxa com 7 casas', { taxa_juros_mensal: 1.1234567 }, 'taxa_juros_mensal', 'Use no máximo 6 casas decimais.'],
+    ['taxa "abc"', { taxa_juros_mensal: 'abc' }, 'taxa_juros_mensal', 'Número inválido.'],
+    ['taxa null', { taxa_juros_mensal: null }, 'taxa_juros_mensal', 'Campo obrigatório.'],
+    ['prazo 0', { prazo_meses: 0 }, 'prazo_meses', PRAZO],
+    ['prazo 73', { prazo_meses: 73 }, 'prazo_meses', PRAZO],
+    ['prazo em texto ("48")', { prazo_meses: '48' }, 'prazo_meses', 'Número inteiro inválido.'],
+    ['prazo 12,5', { prazo_meses: 12.5 }, 'prazo_meses', 'Número inteiro inválido.'],
+    ['prazo null', { prazo_meses: null }, 'prazo_meses', 'Campo obrigatório.'],
+    ['sistema "PRAZO"', { sistema_amortizacao: 'PRAZO' }, 'sistema_amortizacao', SISTEMA],
+    ['sistema vazio', { sistema_amortizacao: '' }, 'sistema_amortizacao', SISTEMA],
+    ['sistema que é número', { sistema_amortizacao: 1 }, 'sistema_amortizacao', SISTEMA],
+    ['entrada -1', { valor_entrada: -1 }, 'valor_entrada', ENTRADA],
+    ['entrada 10.000.000', { valor_entrada: 10000000 }, 'valor_entrada', ENTRADA],
+    ['entrada com 3 casas', { valor_entrada: 100.123 }, 'valor_entrada', 'Use no máximo 2 casas decimais.'],
+    ['entrada igual ao veículo', { valor_entrada: 95000 }, 'valor_entrada', ENTRADA_MAIOR],
+    ['entrada maior que o veículo', { valor_entrada: 95000.01 }, 'valor_entrada', ENTRADA_MAIOR],
+    ['entrada null', { valor_entrada: null }, 'valor_entrada', 'Campo obrigatório.'],
+    ['campo desconhecido', { extra: 1 }, 'extra', 'Campo desconhecido.'],
+    ['usuario_id (nunca vem do cliente)', { usuario_id: 1 }, 'usuario_id', 'Campo desconhecido.'],
+  ])('POST com %s -> 422 com a mensagem real', async (_rotulo, alteracao, campo, mensagem) => {
+    const r = await enviar({ ...FIN, ...alteracao })
+    expect(r.status).toBe(422)
+    expect(r.corpo).toEqual({ erro: 'Dados inválidos', detalhes: { [campo]: [mensagem] } })
+  })
+
+  it('a faixa vem antes da regra "entrada < veículo" (entrada > 9.999.999 dá a mensagem da faixa)', async () => {
+    const r = await enviar({ ...FIN, valor_entrada: 10000000 })
+    expect(r.corpo.detalhes).toEqual({ valor_entrada: [ENTRADA] })
+  })
+
+  it('corpo vazio: "Campo obrigatório." nos quatro campos que não têm padrão (a entrada é opcional)', async () => {
+    const r = await enviar({})
+    expect(r.status).toBe(422)
+    expect(r.corpo.detalhes).toEqual({
+      nome: ['Campo obrigatório.'],
+      prazo_meses: ['Campo obrigatório.'],
+      sistema_amortizacao: ['Campo obrigatório.'],
+      taxa_juros_mensal: ['Campo obrigatório.'],
+    })
+  })
+
+  it('controle: os limites (taxa 20, prazo 1 e 72, entrada 0) são aceitos', async () => {
+    for (const alteracao of [{ taxa_juros_mensal: 20 }, { taxa_juros_mensal: 0 }, { prazo_meses: 1 }, { prazo_meses: 72 }, { valor_entrada: 0 }]) {
+      const r = await enviar({ ...FIN, ...alteracao })
+      expect(r.status, JSON.stringify(alteracao)).toBe(201)
+      await enviar(undefined, 'DELETE', `/${r.corpo.id}`) // libera a vaga para o próximo limite
+    }
+  })
+
+  it('taxa em texto numérico e valor_entrada omitido são aceitos (a entrada vale 0)', async () => {
+    const r = await enviar({ nome: 'B', taxa_juros_mensal: '2.5', prazo_meses: 48, sistema_amortizacao: 'sac' })
+    expect(r.status).toBe(201)
+    expect(r.corpo).toMatchObject({ taxa_juros_mensal: 2.5, valor_entrada: 0, sistema_amortizacao: 'SAC' })
+  })
+
+  it('o PUT substitui tudo: sem valor_entrada volta a 0; parcial dá "Campo obrigatório."; sistema em qualquer caixa', async () => {
+    const criada = (await enviar(FIN)).corpo
+    const semEntrada = { nome: 'Nova', taxa_juros_mensal: 1.5, prazo_meses: 48, sistema_amortizacao: 'Sac' }
+    const r = await enviar(semEntrada, 'PUT', `/${criada.id}`)
+    expect(r.status).toBe(200)
+    expect(r.corpo).toEqual({ id: criada.id, ...semEntrada, sistema_amortizacao: 'SAC' , valor_entrada: 0 })
+
+    const parcial = await enviar({ nome: 'só o nome' }, 'PUT', `/${criada.id}`)
+    expect(parcial.status).toBe(422)
+    expect(parcial.corpo.detalhes).toEqual({
+      prazo_meses: ['Campo obrigatório.'],
+      sistema_amortizacao: ['Campo obrigatório.'],
+      taxa_juros_mensal: ['Campo obrigatório.'],
+    })
+  })
+
+  it('ordem: 4ª opção INVÁLIDA dá 422 (a validação vem antes do 409); válida dá 409 sem detalhes', async () => {
+    for (let i = 0; i < 3; i += 1) await enviar({ ...FIN, nome: `Opção ${i}` })
+    const invalida = await enviar({ ...FIN, prazo_meses: 0 })
+    expect(invalida.status).toBe(422)
+    expect(invalida.corpo.detalhes).toEqual({ prazo_meses: [PRAZO] })
+
+    const valida = await enviar(FIN)
+    expect(valida.status).toBe(409)
+    expect(valida.corpo).toEqual({ erro: 'Uma simulação aceita no máximo 3 opções de financiamento' })
+  })
+
+  it('ordem: o 404 da opção vem antes do 422 do corpo (PUT de opção inexistente com corpo vazio)', async () => {
+    const r = await enviar({}, 'PUT', '/999999')
+    expect(r.status).toBe(404)
+    expect(r.corpo).toEqual({ erro: 'Opção de financiamento não encontrada' })
+  })
+
+  it('GET de uma opção só não existe: 405 "Método não permitido", com ou sem token', async () => {
+    const criada = (await enviar(FIN)).corpo
+    for (const token of [tokenAna, undefined]) {
+      const r = await chamar('GET', url(`/${criada.id}`), { token })
+      expect(r.status).toBe(405)
+      expect(r.corpo).toEqual({ erro: 'Método não permitido' })
+    }
+  })
+})
+
+describe('corpo da requisição: 400 e 415 iguais aos do backend real (em todas as rotas com corpo)', () => {
+  const ROTAS = [
+    ['POST', '/auth/login'],
+    ['POST', '/auth/registrar'],
+    ['POST', '/simulacoes'],
+    ['POST', '/simulacoes/:sim/financiamentos'],
+  ]
+  let caminhoDe
+  beforeEach(() => {
+    const sim = criarSimulacao(ana.id) // o dono da simulação é verificado antes do corpo
+    caminhoDe = (caminho) => caminho.replace(':sim', sim.id)
+  })
+
+  it.each(ROTAS)('%s %s: [], null, vazio e JSON inválido dão a MESMA mensagem 400', async (metodo, caminho) => {
+    for (const bruto of ['[]', 'null', '', '{x']) {
+      const r = await chamar(metodo, caminhoDe(caminho), { token: tokenAna, bruto, cabecalhos: { 'Content-Type': 'application/json' } })
+      expect(r.status, `${caminho} ${JSON.stringify(bruto)}`).toBe(400)
+      expect(r.corpo).toEqual({ erro: 'Corpo da requisição deve ser um objeto JSON' })
+    }
+  })
+
+  it.each(ROTAS)('%s %s: sem Content-Type de JSON dá 415 "Tipo de conteúdo não suportado"', async (metodo, caminho) => {
+    for (const tipo of ['text/plain', undefined]) {
+      const r = await chamar(metodo, caminhoDe(caminho), { token: tokenAna, bruto: '{}', cabecalhos: tipo ? { 'Content-Type': tipo } : {} })
+      expect(r.status, `${caminho} ${tipo}`).toBe(415)
+      expect(r.corpo).toEqual({ erro: 'Tipo de conteúdo não suportado' })
+    }
+  })
+
+  it('controle: um objeto JSON vazio passa do 400 e cai na validação (422)', async () => {
+    const r = await chamar('POST', '/auth/login', { corpo: {} })
+    expect(r.status).toBe(422)
+  })
+})
