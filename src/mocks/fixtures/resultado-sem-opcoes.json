@@ -1,0 +1,257 @@
+{
+  "cenarios": {
+    "a_vista": {
+      "custo_total": 95000.0
+    },
+    "financiamentos": [],
+    "fundo": {
+      "alcanca_a_meta": true,
+      "aporte_mensal": 1881.98,
+      "capital_inicial": 20000.0,
+      "custo_total": 108410.78,
+      "mes_da_meta": 36,
+      "prazo_meses": 36,
+      "preco_na_compra": 108410.78,
+      "rendimento": 20659.54,
+      "saldo_final": 108410.82,
+      "total_aportado": 67751.28
+    }
+  },
+  "menor_custo": {
+    "cenario": "a_vista",
+    "id": null
+  },
+  "series": [
+    {
+      "mes": 0,
+      "preco_corrigido": 95000.0,
+      "saldo_devedor": {},
+      "saldo_fundo": 20000.0
+    },
+    {
+      "mes": 1,
+      "preco_corrigido": 95349.11,
+      "saldo_devedor": {},
+      "saldo_fundo": 22071.76
+    },
+    {
+      "mes": 2,
+      "preco_corrigido": 95699.5,
+      "saldo_devedor": {},
+      "saldo_fundo": 24163.17
+    },
+    {
+      "mes": 3,
+      "preco_corrigido": 96051.17,
+      "saldo_devedor": {},
+      "saldo_fundo": 26274.43
+    },
+    {
+      "mes": 4,
+      "preco_corrigido": 96404.14,
+      "saldo_devedor": {},
+      "saldo_fundo": 28405.72
+    },
+    {
+      "mes": 5,
+      "preco_corrigido": 96758.41,
+      "saldo_devedor": {},
+      "saldo_fundo": 30557.24
+    },
+    {
+      "mes": 6,
+      "preco_corrigido": 97113.98,
+      "saldo_devedor": {},
+      "saldo_fundo": 32729.17
+    },
+    {
+      "mes": 7,
+      "preco_corrigido": 97470.85,
+      "saldo_devedor": {},
+      "saldo_fundo": 34921.71
+    },
+    {
+      "mes": 8,
+      "preco_corrigido": 97829.04,
+      "saldo_devedor": {},
+      "saldo_fundo": 37135.05
+    },
+    {
+      "mes": 9,
+      "preco_corrigido": 98188.54,
+      "saldo_devedor": {},
+      "saldo_fundo": 39369.4
+    },
+    {
+      "mes": 10,
+      "preco_corrigido": 98549.37,
+      "saldo_devedor": {},
+      "saldo_fundo": 41624.95
+    },
+    {
+      "mes": 11,
+      "preco_corrigido": 98911.52,
+      "saldo_devedor": {},
+      "saldo_fundo": 43901.9
+    },
+    {
+      "mes": 12,
+      "preco_corrigido": 99275.0,
+      "saldo_devedor": {},
+      "saldo_fundo": 46200.46
+    },
+    {
+      "mes": 13,
+      "preco_corrigido": 99639.82,
+      "saldo_devedor": {},
+      "saldo_fundo": 48520.82
+    },
+    {
+      "mes": 14,
+      "preco_corrigido": 100005.97,
+      "saldo_devedor": {},
+      "saldo_fundo": 50863.21
+    },
+    {
+      "mes": 15,
+      "preco_corrigido": 100373.48,
+      "saldo_devedor": {},
+      "saldo_fundo": 53227.82
+    },
+    {
+      "mes": 16,
+      "preco_corrigido": 100742.33,
+      "saldo_devedor": {},
+      "saldo_fundo": 55614.86
+    },
+    {
+      "mes": 17,
+      "preco_corrigido": 101112.54,
+      "saldo_devedor": {},
+      "saldo_fundo": 58024.56
+    },
+    {
+      "mes": 18,
+      "preco_corrigido": 101484.11,
+      "saldo_devedor": {},
+      "saldo_fundo": 60457.13
+    },
+    {
+      "mes": 19,
+      "preco_corrigido": 101857.04,
+      "saldo_devedor": {},
+      "saldo_fundo": 62912.77
+    },
+    {
+      "mes": 20,
+      "preco_corrigido": 102231.35,
+      "saldo_devedor": {},
+      "saldo_fundo": 65391.72
+    },
+    {
+      "mes": 21,
+      "preco_corrigido": 102607.03,
+      "saldo_devedor": {},
+      "saldo_fundo": 67894.19
+    },
+    {
+      "mes": 22,
+      "preco_corrigido": 102984.09,
+      "saldo_devedor": {},
+      "saldo_fundo": 70420.4
+    },
+    {
+      "mes": 23,
+      "preco_corrigido": 103362.54,
+      "saldo_devedor": {},
+      "saldo_fundo": 72970.58
+    },
+    {
+      "mes": 24,
+      "preco_corrigido": 103742.38,
+      "saldo_devedor": {},
+      "saldo_fundo": 75544.97
+    },
+    {
+      "mes": 25,
+      "preco_corrigido": 104123.61,
+      "saldo_devedor": {},
+      "saldo_fundo": 78143.78
+    },
+    {
+      "mes": 26,
+      "preco_corrigido": 104506.24,
+      "saldo_devedor": {},
+      "saldo_fundo": 80767.25
+    },
+    {
+      "mes": 27,
+      "preco_corrigido": 104890.28,
+      "saldo_devedor": {},
+      "saldo_fundo": 83415.61
+    },
+    {
+      "mes": 28,
+      "preco_corrigido": 105275.74,
+      "saldo_devedor": {},
+      "saldo_fundo": 86089.1
+    },
+    {
+      "mes": 29,
+      "preco_corrigido": 105662.6,
+      "saldo_devedor": {},
+      "saldo_fundo": 88787.97
+    },
+    {
+      "mes": 30,
+      "preco_corrigido": 106050.89,
+      "saldo_devedor": {},
+      "saldo_fundo": 91512.44
+    },
+    {
+      "mes": 31,
+      "preco_corrigido": 106440.61,
+      "saldo_devedor": {},
+      "saldo_fundo": 94262.76
+    },
+    {
+      "mes": 32,
+      "preco_corrigido": 106831.76,
+      "saldo_devedor": {},
+      "saldo_fundo": 97039.18
+    },
+    {
+      "mes": 33,
+      "preco_corrigido": 107224.35,
+      "saldo_devedor": {},
+      "saldo_fundo": 99841.94
+    },
+    {
+      "mes": 34,
+      "preco_corrigido": 107618.37,
+      "saldo_devedor": {},
+      "saldo_fundo": 102671.3
+    },
+    {
+      "mes": 35,
+      "preco_corrigido": 108013.85,
+      "saldo_devedor": {},
+      "saldo_fundo": 105527.51
+    },
+    {
+      "mes": 36,
+      "preco_corrigido": 108410.78,
+      "saldo_devedor": {},
+      "saldo_fundo": 108410.82
+    }
+  ],
+  "simulacao": {
+    "id": 1,
+    "nome": "Carro de exemplo",
+    "prazo_meses_fundo": 36,
+    "taxa_fundo_rendimento": 12.0,
+    "taxa_ipca_projetada": 4.5,
+    "valor_entrada": 20000.0,
+    "valor_veiculo": 95000.0
+  }
+}

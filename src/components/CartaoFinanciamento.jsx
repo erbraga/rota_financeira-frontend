@@ -9,7 +9,7 @@ import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 import { ROTULO_DO_SISTEMA } from '../schemas/financiamento.js'
-import { formatarMoeda, formatarPercentual } from '../utils/formatar.js'
+import { formatarMoeda, formatarPercentual, formatarPrazo } from '../utils/formatar.js'
 
 // Os ícones são importados por caminho (@mui/icons-material/EditOutlined), nunca pelo pacote raiz.
 
@@ -23,8 +23,6 @@ function Linha({ rotulo, valor }) {
     </Box>
   )
 }
-
-const prazoEmTexto = (meses) => `${meses} ${meses === 1 ? 'mês' : 'meses'}`
 
 // Cartão de uma opção de financiamento: só o que a API devolve (nome, sistema, taxa, prazo e entrada). Parcela, valor
 // financiado e totais NÃO aparecem aqui: o frontend não calcula, e a API só os entrega no resultado (Etapa 6).
@@ -46,7 +44,7 @@ export default function CartaoFinanciamento({ financiamento, aoEditar, aoExcluir
         </Typography>
         <Chip label={ROTULO_DO_SISTEMA[sistema] ?? sistema} size="small" variant="outlined" sx={{ mb: 1.5 }} />
         <Linha rotulo="Taxa de juros" valor={`${formatarPercentual(taxa)} a.m.`} />
-        <Linha rotulo="Prazo" valor={prazoEmTexto(prazo)} />
+        <Linha rotulo="Prazo" valor={formatarPrazo(prazo)} />
         <Linha rotulo="Entrada" valor={formatarMoeda(entrada)} />
       </CardContent>
       <CardActions sx={{ justifyContent: 'flex-end', px: 2, pb: 2 }}>

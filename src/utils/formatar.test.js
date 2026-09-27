@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
   formatarData,
+  formatarMes,
   formatarMesAno,
+  formatarMoedaCompacta,
+  formatarPrazo,
   formatarMoeda,
   casasDecimais,
   dinheiroParaCampo,
@@ -302,3 +305,41 @@ describe('casasDecimais', () => {
   })
 })
 
+
+describe('formatarMoedaCompacta (eixos do gráfico)', () => {
+  it.each([
+    [0, 'R$ 0'],
+    [950, 'R$ 950'],
+    [1000, 'R$ 1 mil'],
+    [12500, 'R$ 12,5 mil'],
+    [95000, 'R$ 95 mil'],
+    [108410.78, 'R$ 108,4 mil'],
+    [1234567, 'R$ 1,2 mi'],
+    [3040000, 'R$ 3 mi'],
+    [11411660.11, 'R$ 11,4 mi'],
+  ])('%s -> %s', (valor, esperado) => {
+    expect(semNbsp(formatarMoedaCompacta(valor))).toBe(esperado)
+  })
+
+  it.each([null, undefined, '', NaN])('%s -> traço', (valor) => {
+    expect(formatarMoedaCompacta(valor)).toBe(SEM_VALOR)
+  })
+})
+
+describe('formatarPrazo e formatarMes', () => {
+  it('prazo: 1 mês e N meses', () => {
+    expect(formatarPrazo(1)).toBe('1 mês')
+    expect(formatarPrazo(48)).toBe('48 meses')
+    expect(formatarPrazo(72)).toBe('72 meses')
+  })
+
+  it('mês: "mês 44", inclusive o mês 0', () => {
+    expect(formatarMes(44)).toBe('mês 44')
+    expect(formatarMes(0)).toBe('mês 0')
+  })
+
+  it.each([null, undefined, '', NaN])('%s -> traço (sem prazo nem mês, como a meta que não é alcançada)', (valor) => {
+    expect(formatarPrazo(valor)).toBe(SEM_VALOR)
+    expect(formatarMes(valor)).toBe(SEM_VALOR)
+  })
+})

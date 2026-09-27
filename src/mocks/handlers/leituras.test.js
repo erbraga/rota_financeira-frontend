@@ -11,6 +11,7 @@ import parcelasSac from '../fixtures/parcelas-sac.json'
 import { servidor } from '../servidor.js'
 import { handlers } from './index.js'
 import { indiceDesatualizado, indiceIndisponivel, INDICES, indiceSemSugestao } from './indices.js'
+import { FIXTURES_DE_RESULTADO, resultadoFundoVence, resultadoIndisponivel, resultadoSemOpcoes, resultadoTresOpcoes } from './resultado.js'
 
 let ana
 let bia
@@ -98,6 +99,85 @@ describe('GET /simulacoes/:id/resultado', () => {
   it('ordem: o 404 vem antes do 422', async () => {
     const r = await chamar('GET', `/simulacoes/${cenario.simulacao.id}/resultado?aporte_mensal=abc`, { token: tokenBia })
     expect(r.status).toBe(404)
+  })
+})
+
+// Mensagens do parâmetro aporte_mensal, copiadas do backend REAL (conta descartável, 2026-09-27): a referência são estes
+// literais, nunca o próprio handler.
+describe('GET /simulacoes/:id/resultado: parâmetro aporte_mensal igual ao do backend real', () => {
+  const consultar = (consulta) =>
+    chamar('GET', `/simulacoes/${cenario.simulacao.id}/resultado${consulta}`, { token: tokenAna })
+  const FAIXA = 'O aporte mensal deve estar entre 0,00 e 9.999.999,00.'
+
+  it.each([
+    ['texto', '?aporte_mensal=abc', 'aporte_mensal', 'Número inválido.'],
+    ['vazio', '?aporte_mensal=', 'aporte_mensal', 'Número inválido.'],
+    ['só espaços', '?aporte_mensal=%20%20', 'aporte_mensal', 'Número inválido.'],
+    ['vírgula decimal', '?aporte_mensal=1500,5', 'aporte_mensal', 'Número inválido.'],
+    ['negativo', '?aporte_mensal=-1', 'aporte_mensal', FAIXA],
+    ['acima do teto (9.999.999,01)', '?aporte_mensal=9999999.01', 'aporte_mensal', FAIXA],
+    ['3 casas decimais', '?aporte_mensal=1500.505', 'aporte_mensal', 'Use no máximo 2 casas decimais.'],
+    ['repetido', '?aporte_mensal=2000&aporte_mensal=3000', 'aporte_mensal', 'Informe o parâmetro uma única vez.'],
+    ['parâmetro desconhecido (foo)', '?foo=1', 'foo', 'Campo desconhecido.'],
+    ['parâmetro desconhecido (aporte)', '?aporte=1500', 'aporte', 'Campo desconhecido.'],
+    ['aporte válido com parâmetro desconhecido', '?aporte_mensal=1500&foo=1', 'foo', 'Campo desconhecido.'],
+  ])('%s -> 422 com a mensagem real', async (_rotulo, consulta, campo, mensagem) => {
+    const r = await consultar(consulta)
+    expect(r.status).toBe(422)
+    expect(r.corpo).toEqual({ erro: 'Dados inválidos', detalhes: { [campo]: [mensagem] } })
+  })
+
+  it.each(['1500', '1500.50', '100', '0', '9999999', '1e3'])('aporte %s é válido (controle dos 422)', async (valor) => {
+    expect((await consultar(`?aporte_mensal=${valor}`)).status).toBe(200)
+  })
+
+  it('a ordem é 401 -> 404 -> 422 (aporte inválido em simulação que não existe dá 404)', async () => {
+    expect((await chamar('GET', '/simulacoes/999999/resultado?aporte_mensal=abc', { token: tokenAna })).corpo).toEqual({
+      erro: 'Simulação não encontrada',
+    })
+    expect((await chamar('GET', '/simulacoes/abc/resultado', { token: tokenAna })).corpo).toEqual({ erro: 'Recurso não encontrado' })
+    expect((await chamar('GET', `/simulacoes/${cenario.simulacao.id}/resultado?aporte_mensal=abc`)).status).toBe(401)
+  })
+})
+
+describe('atalhos de teste do /resultado', () => {
+  const consultar = (consulta = '') =>
+    chamar('GET', `/simulacoes/${cenario.simulacao.id}/resultado${consulta}`, { token: tokenAna })
+
+  it.each([
+    ['resultadoSemOpcoes', resultadoSemOpcoes, FIXTURES_DE_RESULTADO.semOpcoes],
+    ['resultadoTresOpcoes', resultadoTresOpcoes, FIXTURES_DE_RESULTADO.tresOpcoes],
+    ['resultadoFundoVence', resultadoFundoVence, FIXTURES_DE_RESULTADO.fundoVence],
+  ])('%s devolve a fixture real correspondente', async (_nome, atalho, fixture) => {
+    servidor.use(atalho())
+    const r = await consultar()
+    expect(r.status).toBe(200)
+    expect(r.corpo).toEqual(fixture)
+    expect(r.corpo).not.toEqual(resultado)
+  })
+
+  it('os atalhos mantêm as regras de acesso e de parâmetros (401, 404 e 422)', async () => {
+    servidor.use(resultadoSemOpcoes())
+    expect((await chamar('GET', `/simulacoes/${cenario.simulacao.id}/resultado`)).status).toBe(401)
+    expect((await chamar('GET', `/simulacoes/${cenario.simulacao.id}/resultado`, { token: tokenBia })).status).toBe(404)
+    expect((await consultar('?aporte_mensal=abc')).status).toBe(422)
+  })
+
+  it('com aporte informado o atalho devolve as fixtures do modo aporte (alcança e não alcança)', async () => {
+    servidor.use(resultadoTresOpcoes())
+    expect((await consultar('?aporte_mensal=1500')).corpo).toEqual(resultadoAporte)
+    expect((await consultar('?aporte_mensal=100')).corpo).toEqual(resultadoAporteInsuficiente)
+  })
+
+  it('resultadoIndisponivel: 503 com a mensagem genérica', async () => {
+    servidor.use(resultadoIndisponivel())
+    const r = await consultar()
+    expect(r.status).toBe(503)
+    expect(r.corpo).toEqual({ erro: 'Serviço indisponível' })
+  })
+
+  it('sem atalho, o comportamento volta ao normal (controle)', async () => {
+    expect((await consultar()).corpo).toEqual(resultado)
   })
 })
 

@@ -23,7 +23,7 @@ describe('rotas privadas (com sessão)', () => {
     ['/simulacoes', 'Minhas simulações'],
     ['/simulacoes/nova', 'Nova simulação'],
     ['/simulacoes/1/editar', 'Editar simulação'],
-    ['/simulacoes/1/resultado', 'Resultado da simulação #1'],
+    ['/simulacoes/1/resultado', 'Resultado: Carro de exemplo'],
     ['/simulacoes/1/financiamentos/2', 'Amortização da opção #2'],
   ])('%s mostra "%s", dentro do layout com o nome do usuário e o Sair', async (rota, titulo) => {
     renderizarComAuth(<App />, { rota, token })
@@ -33,6 +33,7 @@ describe('rotas privadas (com sessão)', () => {
     // A tela real do histórico busca a lista: espera terminar para nada resolver depois do teste.
     if (rota === '/simulacoes') await screen.findByRole('heading', { level: 2, name: 'Onix' })
     if (rota === '/simulacoes/1/editar') await screen.findByLabelText('Nome da simulação')
+    if (rota === '/simulacoes/1/resultado') await screen.findByRole('heading', { level: 2, name: 'Evolução mês a mês' })
   })
 
   it('/ redireciona para as simulações', async () => {

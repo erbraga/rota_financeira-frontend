@@ -7,6 +7,9 @@ export const chavesSimulacoes = {
   detalhe: (id) => ['simulacoes', String(id)],
   // Opções de financiamento de uma simulação ({ itens, total }, em ordem de criação).
   financiamentos: (id) => ['simulacoes', String(id), 'financiamentos'],
-  // Resultado comparativo (Etapa 6): reservada aqui porque criar, editar ou excluir uma opção o invalida.
-  resultado: (id) => ['simulacoes', String(id), 'resultado'],
+  // Resultado comparativo. Sem aporte é a chave-PREFIXO (o resultado padrão); com aporte (o "e se eu guardar X por mês?")
+  // acrescenta o valor (número). Invalidar ou remover a chave sem aporte pega as duas (mesmo prefixo), que é o que se quer
+  // quando uma opção ou a simulação muda; os caches do padrão e do com aporte são SEPARADOS (voltar ao padrão não refaz a chamada).
+  resultado: (id, aporte) =>
+    aporte === undefined || aporte === null ? ['simulacoes', String(id), 'resultado'] : ['simulacoes', String(id), 'resultado', aporte],
 }

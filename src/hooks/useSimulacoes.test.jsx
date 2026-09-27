@@ -48,6 +48,11 @@ describe('chavesSimulacoes', () => {
     expect(chavesSimulacoes.financiamentos(7)).toEqual(['simulacoes', '7', 'financiamentos'])
     expect(chavesSimulacoes.financiamentos('7')).toEqual(chavesSimulacoes.financiamentos(7))
     expect(chavesSimulacoes.resultado(7)).toEqual(['simulacoes', '7', 'resultado'])
+    expect(chavesSimulacoes.resultado('7')).toEqual(chavesSimulacoes.resultado(7))
+    expect(chavesSimulacoes.resultado(7, 1500.5)).toEqual(['simulacoes', '7', 'resultado', 1500.5])
+    expect(chavesSimulacoes.resultado(7, 0)).toEqual(['simulacoes', '7', 'resultado', 0]) // aporte 0 é um aporte
+    expect(chavesSimulacoes.resultado(7, null)).toEqual(chavesSimulacoes.resultado(7))
+    expect(chavesSimulacoes.resultado(7, 1500)).not.toEqual(chavesSimulacoes.resultado(7, 1500.5))
     expect(chavesSimulacoes.financiamentos(7)).not.toEqual(chavesSimulacoes.detalhe(7))
     expect(chavesSimulacoes.financiamentos(7).slice(0, 2)).toEqual(chavesSimulacoes.detalhe(7))
   })

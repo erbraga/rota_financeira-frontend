@@ -5,6 +5,11 @@ import { criarUsuario, semearCenarioPadrao, tokenDe } from './banco.js'
 import { chamar } from './chamar.js'
 import { CONTRATO } from './contrato.js'
 import resultado from './fixtures/resultado.json'
+import resultadoAporte from './fixtures/resultado-aporte.json'
+import resultadoAporteInsuficiente from './fixtures/resultado-aporte-insuficiente.json'
+import resultadoFundoVence from './fixtures/resultado-fundo-vence.json'
+import resultadoSemOpcoes from './fixtures/resultado-sem-opcoes.json'
+import resultadoTresOpcoes from './fixtures/resultado-tres-opcoes.json'
 import { handlers } from './handlers/index.js'
 import { indiceSemSugestao } from './handlers/indices.js'
 import { servidor } from './servidor.js'
@@ -36,6 +41,66 @@ describe('conferirChaves detecta deriva (controle do teste de formato)', () => {
 
   it('passa com o objeto certo', () => {
     expect(() => conferirChaves(resultado.series[0], 'PontoSerie')).not.toThrow()
+  })
+})
+
+// Todas as fixtures de /resultado (capturadas do backend real) têm as chaves do contrato em todos os blocos.
+const FIXTURES_DE_RESULTADO = {
+  padrao: resultado,
+  'aporte que alcança a meta': resultadoAporte,
+  'aporte que não alcança': resultadoAporteInsuficiente,
+  'sem opções': resultadoSemOpcoes,
+  'três opções (prazos 48, 36 e 72)': resultadoTresOpcoes,
+  'o fundo vence': resultadoFundoVence,
+}
+
+describe('fixtures de /resultado', () => {
+  it.each(Object.entries(FIXTURES_DE_RESULTADO))('%s: todos os blocos com as chaves do contrato', (_nome, corpo) => {
+    conferirChaves(corpo, 'Resultado')
+    conferirChaves(corpo.simulacao, 'SimulacaoNoResultado')
+    conferirChaves(corpo.cenarios, 'Cenarios')
+    conferirChaves(corpo.cenarios.a_vista, 'AVista')
+    conferirChaves(corpo.cenarios.fundo, 'ResultadoFundo')
+    conferirChaves(corpo.menor_custo, 'MenorCusto')
+    for (const financiamento of corpo.cenarios.financiamentos) conferirChaves(financiamento, 'ResultadoFinanciamento')
+    for (const ponto of corpo.series) conferirChaves(ponto, 'PontoSerie')
+  })
+
+  it('as séries têm um ponto por mês, do mês 0 ao maior prazo, e o saldo_devedor tem uma chave por opção (id como texto)', () => {
+    const esperado = { 'sem opções': 37, 'três opções (prazos 48, 36 e 72)': 73, 'o fundo vence': 37, padrao: 49 }
+    for (const [nome, pontos] of Object.entries(esperado)) {
+      const corpo = FIXTURES_DE_RESULTADO[nome]
+      expect(corpo.series, nome).toHaveLength(pontos)
+      expect(corpo.series.map((p) => p.mes), nome).toEqual(Array.from({ length: pontos }, (_, mes) => mes))
+      const ids = corpo.cenarios.financiamentos.map((f) => String(f.id)).sort()
+      for (const ponto of corpo.series) expect(Object.keys(ponto.saldo_devedor).sort(), nome).toEqual(ids)
+    }
+  })
+
+  it('sem opções: saldo_devedor vem vazio ({}) e a lista de financiamentos também', () => {
+    expect(resultadoSemOpcoes.cenarios.financiamentos).toEqual([])
+    expect(resultadoSemOpcoes.series.every((p) => Object.keys(p.saldo_devedor).length === 0)).toBe(true)
+  })
+
+  it('o vencedor é "a_vista" ou "fundo" (id null); o fundo vence com IPCA negativo', () => {
+    expect(resultadoFundoVence.menor_custo).toEqual({ cenario: 'fundo', id: null })
+    expect(resultadoFundoVence.simulacao.taxa_ipca_projetada).toBeLessThan(0)
+    expect(resultadoTresOpcoes.menor_custo).toEqual({ cenario: 'a_vista', id: null })
+  })
+
+  it('o null marca onde a série terminou: saldo do fundo depois do prazo e saldo da opção depois do último mês', () => {
+    const tres = resultadoTresOpcoes.series
+    expect(tres[36].saldo_fundo).not.toBeNull()
+    expect(tres[37].saldo_fundo).toBeNull() // o fundo terminou no mês 36
+    expect(tres[36].saldo_devedor['2']).toBe(0) // a SAC de 36 meses termina zerada no mês 36
+    expect(tres[37].saldo_devedor['2']).toBeNull() // e depois vem null
+    expect(tres[72].saldo_devedor['3']).toBe(0)
+    expect(tres.every((p) => p.preco_corrigido !== null)).toBe(true) // o preço corrigido existe em todo o eixo
+  })
+
+  it('controle: uma fixture sem a chave saldo_fundo é recusada', () => {
+    const { saldo_fundo: _removida, ...semSaldo } = resultadoSemOpcoes.series[0]
+    expect(() => conferirChaves(semSaldo, 'PontoSerie')).toThrow()
   })
 })
 

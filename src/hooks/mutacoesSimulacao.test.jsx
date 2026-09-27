@@ -97,6 +97,31 @@ describe('useAtualizarSimulacao', () => {
     expect(chamadas('GET /simulacoes')).toBe(2)
   })
 
+  it('invalida o resultado da simulação editada (o padrão E o com aporte), e só o dela (controle)', async () => {
+    const s = criarSimulacao(ana.id)
+    const outra = criarSimulacao(ana.id)
+    const { result, queryClient } = renderizarHookComAuth(() => useAtualizarSimulacao(s.id), { token })
+    queryClient.setQueryData(chavesSimulacoes.resultado(s.id), { x: 'padrão' })
+    queryClient.setQueryData(chavesSimulacoes.resultado(s.id, 1500), { x: 'com aporte' })
+    queryClient.setQueryData(chavesSimulacoes.resultado(outra.id), { x: 'de outra' })
+
+    await act(async () => {
+      await result.current.mutateAsync(CORPO)
+    })
+    expect(queryClient.getQueryState(chavesSimulacoes.resultado(s.id)).isInvalidated).toBe(true)
+    expect(queryClient.getQueryState(chavesSimulacoes.resultado(s.id, 1500)).isInvalidated).toBe(true)
+    expect(queryClient.getQueryState(chavesSimulacoes.resultado(outra.id)).isInvalidated).toBe(false)
+  })
+
+  it('a edição que FALHA (404) não invalida o resultado (controle)', async () => {
+    const { result, queryClient } = renderizarHookComAuth(() => useAtualizarSimulacao(999), { token })
+    queryClient.setQueryData(chavesSimulacoes.resultado(999), { x: 'padrão' })
+    await act(async () => {
+      await result.current.mutateAsync(CORPO).catch(() => {})
+    })
+    expect(queryClient.getQueryState(chavesSimulacoes.resultado(999)).isInvalidated).toBe(false)
+  })
+
   it('o id da rota (texto) e o da resposta (número) usam a MESMA chave de cache', async () => {
     const s = criarSimulacao(ana.id)
     const { result, queryClient } = renderizarHookComAuth(() => useAtualizarSimulacao(String(s.id)), { token })

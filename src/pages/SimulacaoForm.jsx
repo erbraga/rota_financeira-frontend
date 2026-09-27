@@ -11,6 +11,7 @@ import { useAviso } from '../avisos/useAviso.js'
 import EstadoErro from '../components/EstadoErro.jsx'
 import FormularioSimulacao from '../components/FormularioSimulacao.jsx'
 import SecaoFinanciamentos from '../components/SecaoFinanciamentos.jsx'
+import SimulacaoNaoEncontrada from '../components/SimulacaoNaoEncontrada.jsx'
 import { useAtualizarSimulacao } from '../hooks/useAtualizarSimulacao.js'
 import { useCriarSimulacao } from '../hooks/useCriarSimulacao.js'
 import { useIndice } from '../hooks/useIndice.js'
@@ -65,23 +66,6 @@ function NovaSimulacao() {
           </Button>
         }
       />
-    </Box>
-  )
-}
-
-function SimulacaoNaoEncontrada() {
-  return (
-    <Box component="section" sx={{ py: 3 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Simulação não encontrada
-      </Typography>
-      <Alert severity="info" sx={{ mb: 2 }}>
-        <AlertTitle>Ela pode ter sido excluída ou não existe.</AlertTitle>
-        Volte ao histórico para ver as suas simulações.
-      </Alert>
-      <Button component={RouterLink} to="/simulacoes" variant="contained">
-        Voltar ao histórico
-      </Button>
     </Box>
   )
 }

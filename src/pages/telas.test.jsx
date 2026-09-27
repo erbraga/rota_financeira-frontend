@@ -3,7 +3,6 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import Amortizacao from './Amortizacao.jsx'
 import NaoEncontrada from './NaoEncontrada.jsx'
-import Resultado from './Resultado.jsx'
 
 // Renderiza a tela na rota indicada, como o roteador da aplicação faria.
 function renderizar(caminhoRota, urlAtual, Tela) {
@@ -18,7 +17,6 @@ function renderizar(caminhoRota, urlAtual, Tela) {
 
 describe('telas provisórias', () => {
   it.each([
-    ['/simulacoes/:id/resultado', '/simulacoes/7/resultado', Resultado, 'Resultado da simulação #7'],
     [
       '/simulacoes/:id/financiamentos/:fid',
       '/simulacoes/7/financiamentos/3',

@@ -10,6 +10,15 @@ const formatoPercentual = new Intl.NumberFormat('pt-BR', {
   maximumFractionDigits: 6,
 })
 
+// Valores do eixo do gráfico: "R$ 100 mil", "R$ 1,2 mi" (até 1 casa; nada além do compacto do Intl).
+const formatoMoedaCompacta = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+  notation: 'compact',
+  compactDisplay: 'short',
+  maximumFractionDigits: 1,
+})
+
 function numeroValido(valor) {
   if (valor === null || valor === undefined || valor === '') return null
   const numero = Number(valor)
@@ -26,6 +35,24 @@ export function formatarMoeda(valor) {
 export function formatarPercentual(valor) {
   const numero = numeroValido(valor)
   return numero === null ? SEM_VALOR : `${formatoPercentual.format(numero)}%`
+}
+
+// 108410.78 -> "R$ 108,4 mil" (só para os eixos; os valores exatos usam formatarMoeda).
+export function formatarMoedaCompacta(valor) {
+  const numero = numeroValido(valor)
+  return numero === null ? SEM_VALOR : formatoMoedaCompacta.format(numero)
+}
+
+// Prazo em meses: 1 -> "1 mês", 48 -> "48 meses".
+export function formatarPrazo(meses) {
+  const numero = numeroValido(meses)
+  return numero === null ? SEM_VALOR : `${numero} ${numero === 1 ? 'mês' : 'meses'}`
+}
+
+// O mês de uma série ou da meta do fundo: 44 -> "mês 44" (0 = "mês 0", o momento de hoje).
+export function formatarMes(mes) {
+  const numero = numeroValido(mes)
+  return numero === null ? SEM_VALOR : `mês ${numero}`
 }
 
 const SO_DIA = /^(\d{4})-(\d{2})-(\d{2})$/
