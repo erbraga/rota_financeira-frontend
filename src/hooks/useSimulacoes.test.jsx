@@ -53,6 +53,13 @@ describe('chavesSimulacoes', () => {
     expect(chavesSimulacoes.resultado(7, 0)).toEqual(['simulacoes', '7', 'resultado', 0]) // aporte 0 é um aporte
     expect(chavesSimulacoes.resultado(7, null)).toEqual(chavesSimulacoes.resultado(7))
     expect(chavesSimulacoes.resultado(7, 1500)).not.toEqual(chavesSimulacoes.resultado(7, 1500.5))
+    // parcelas: por opção, com o prefixo da simulação; FORA do prefixo das opções (a lista) e do resultado
+    expect(chavesSimulacoes.parcelas(7, 3)).toEqual(['simulacoes', '7', 'parcelas', '3'])
+    expect(chavesSimulacoes.parcelas('7', '3')).toEqual(chavesSimulacoes.parcelas(7, 3))
+    expect(chavesSimulacoes.parcelas(7)).toEqual(['simulacoes', '7', 'parcelas'])
+    expect(chavesSimulacoes.parcelas(7, 3).slice(0, 3)).toEqual(chavesSimulacoes.parcelas(7))
+    expect(chavesSimulacoes.parcelas(7, 3)).not.toEqual(chavesSimulacoes.parcelas(7, 4))
+    expect(chavesSimulacoes.parcelas(7, 3).slice(0, 3)).not.toEqual(chavesSimulacoes.financiamentos(7))
     expect(chavesSimulacoes.financiamentos(7)).not.toEqual(chavesSimulacoes.detalhe(7))
     expect(chavesSimulacoes.financiamentos(7).slice(0, 2)).toEqual(chavesSimulacoes.detalhe(7))
   })

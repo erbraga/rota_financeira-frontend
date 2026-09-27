@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 import App from './App.jsx'
-import { criarSimulacao, criarUsuario, tokenDe } from './mocks/banco.js'
+import { criarFinanciamento, criarSimulacao, criarUsuario, tokenDe } from './mocks/banco.js'
 import { handlers } from './mocks/handlers/index.js'
 import { servidor } from './mocks/servidor.js'
 import { renderizarComAuth } from './testUtils.jsx'
@@ -12,8 +12,8 @@ beforeEach(() => {
   servidor.use(...handlers)
   const ana = criarUsuario({ nome: 'Ana Souza', email: 'ana@example.com' })
   token = tokenDe(ana)
-  // Simulação 1 da Ana: as telas de edição carregam por id (sem ela seriam "não encontrada").
-  criarSimulacao(ana.id, { nome: 'Onix' })
+  // Simulação 1 da Ana, com a opção 1: as telas carregam por id (sem elas seriam "não encontrada").
+  criarFinanciamento(criarSimulacao(ana.id, { nome: 'Onix' }).id)
 })
 
 const h1 = (nome) => screen.findByRole('heading', { level: 1, name: nome })
@@ -24,7 +24,7 @@ describe('rotas privadas (com sessão)', () => {
     ['/simulacoes/nova', 'Nova simulação'],
     ['/simulacoes/1/editar', 'Editar simulação'],
     ['/simulacoes/1/resultado', 'Resultado: Carro de exemplo'],
-    ['/simulacoes/1/financiamentos/2', 'Amortização da opção #2'],
+    ['/simulacoes/1/financiamentos/1', 'Amortização: Banco Exemplo Price 48x'],
   ])('%s mostra "%s", dentro do layout com o nome do usuário e o Sair', async (rota, titulo) => {
     renderizarComAuth(<App />, { rota, token })
     expect(await h1(titulo)).toBeInTheDocument()
@@ -34,6 +34,7 @@ describe('rotas privadas (com sessão)', () => {
     if (rota === '/simulacoes') await screen.findByRole('heading', { level: 2, name: 'Onix' })
     if (rota === '/simulacoes/1/editar') await screen.findByLabelText('Nome da simulação')
     if (rota === '/simulacoes/1/resultado') await screen.findByRole('heading', { level: 2, name: 'Evolução mês a mês' })
+    if (rota === '/simulacoes/1/financiamentos/1') await screen.findByRole('heading', { level: 2, name: 'Parcelas mês a mês' })
   })
 
   it('/ redireciona para as simulações', async () => {

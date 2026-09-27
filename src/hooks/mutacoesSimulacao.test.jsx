@@ -113,6 +113,31 @@ describe('useAtualizarSimulacao', () => {
     expect(queryClient.getQueryState(chavesSimulacoes.resultado(outra.id)).isInvalidated).toBe(false)
   })
 
+  it('invalida as parcelas de TODAS as opções da simulação editada (o veículo muda o valor financiado), e só as dela', async () => {
+    const s = criarSimulacao(ana.id)
+    const outra = criarSimulacao(ana.id)
+    const { result, queryClient } = renderizarHookComAuth(() => useAtualizarSimulacao(s.id), { token })
+    queryClient.setQueryData(chavesSimulacoes.parcelas(s.id, 1), { x: 'opção 1' })
+    queryClient.setQueryData(chavesSimulacoes.parcelas(s.id, 2), { x: 'opção 2' })
+    queryClient.setQueryData(chavesSimulacoes.parcelas(outra.id, 1), { x: 'de outra' })
+
+    await act(async () => {
+      await result.current.mutateAsync(CORPO)
+    })
+    expect(queryClient.getQueryState(chavesSimulacoes.parcelas(s.id, 1)).isInvalidated).toBe(true)
+    expect(queryClient.getQueryState(chavesSimulacoes.parcelas(s.id, 2)).isInvalidated).toBe(true)
+    expect(queryClient.getQueryState(chavesSimulacoes.parcelas(outra.id, 1)).isInvalidated).toBe(false)
+  })
+
+  it('a edição que FALHA (404) não invalida as parcelas (controle)', async () => {
+    const { result, queryClient } = renderizarHookComAuth(() => useAtualizarSimulacao(999), { token })
+    queryClient.setQueryData(chavesSimulacoes.parcelas(999, 1), { x: 'opção' })
+    await act(async () => {
+      await result.current.mutateAsync(CORPO).catch(() => {})
+    })
+    expect(queryClient.getQueryState(chavesSimulacoes.parcelas(999, 1)).isInvalidated).toBe(false)
+  })
+
   it('a edição que FALHA (404) não invalida o resultado (controle)', async () => {
     const { result, queryClient } = renderizarHookComAuth(() => useAtualizarSimulacao(999), { token })
     queryClient.setQueryData(chavesSimulacoes.resultado(999), { x: 'padrão' })

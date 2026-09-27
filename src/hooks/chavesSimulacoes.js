@@ -12,4 +12,8 @@ export const chavesSimulacoes = {
   // quando uma opção ou a simulação muda; os caches do padrão e do com aporte são SEPARADOS (voltar ao padrão não refaz a chamada).
   resultado: (id, aporte) =>
     aporte === undefined || aporte === null ? ['simulacoes', String(id), 'resultado'] : ['simulacoes', String(id), 'resultado', aporte],
+  // Tabela de amortização de UMA opção. Sem `fid` é o prefixo das parcelas de todas as opções da simulação (editar a simulação
+  // invalida todas). Fica FORA do prefixo `financiamentos`, para uma mudança da lista de opções não refazê-las à toa.
+  parcelas: (id, fid) =>
+    fid === undefined || fid === null ? ['simulacoes', String(id), 'parcelas'] : ['simulacoes', String(id), 'parcelas', String(fid)],
 }

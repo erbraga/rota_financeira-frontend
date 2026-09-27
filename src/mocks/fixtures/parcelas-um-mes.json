@@ -1,0 +1,25 @@
+{
+  "financiamento": {
+    "id": 1,
+    "nome": "Banco Exemplo 1 mês",
+    "prazo_meses": 1,
+    "sistema_amortizacao": "PRICE",
+    "taxa_juros_mensal": 1.5,
+    "valor_entrada": 20000.0,
+    "valor_financiado": 75000.0
+  },
+  "parcelas": [
+    {
+      "amortizacao": 75000.0,
+      "juros": 1125.0,
+      "numero": 1,
+      "saldo_devedor": 0.0,
+      "valor_parcela": 76125.0
+    }
+  ],
+  "totais": {
+    "custo_total": 96125.0,
+    "total_juros": 1125.0,
+    "total_pago": 76125.0
+  }
+}

@@ -218,3 +218,72 @@ describe('excluir a SIMULAÇÃO leva junto o cache das opções (mesmo prefixo)'
     expect(queryClient.getQueryData(chavesSimulacoes.financiamentos(outra.id))).toEqual({ itens: [], total: 0 })
   })
 })
+
+describe('parcelas (tabela de amortização) e as mutações das opções', () => {
+  const semear = (queryClient, ids) => {
+    for (const id of ids) queryClient.setQueryData(chavesSimulacoes.parcelas(sim.id, id), { financiamento: { id } })
+  }
+
+  it('editar a opção invalida SÓ as parcelas dela (as das outras opções ficam)', async () => {
+    const a = criarFinanciamento(sim.id, { nome: 'A' })
+    const b = criarFinanciamento(sim.id, { nome: 'B' })
+    const { result, queryClient } = await comListaCarregada()
+    semear(queryClient, [a.id, b.id])
+    await executar(() => result.current.atualizar.mutateAsync({ id: a.id, corpo: CORPO }))
+    expect(queryClient.getQueryState(chavesSimulacoes.parcelas(sim.id, a.id)).isInvalidated).toBe(true)
+    expect(queryClient.getQueryState(chavesSimulacoes.parcelas(sim.id, b.id)).isInvalidated).toBe(false)
+  })
+
+  it('a edição que FALHA (404) não invalida as parcelas (controle)', async () => {
+    const a = criarFinanciamento(sim.id, { nome: 'A' })
+    const { result, queryClient } = await comListaCarregada()
+    semear(queryClient, [a.id])
+    banco.financiamentos = []
+    await executar(() => result.current.atualizar.mutateAsync({ id: a.id, corpo: CORPO }).catch(() => {}))
+    expect(queryClient.getQueryState(chavesSimulacoes.parcelas(sim.id, a.id)).isInvalidated).toBe(false)
+  })
+
+  it('excluir a opção REMOVE as parcelas dela do cache (as das outras ficam)', async () => {
+    const a = criarFinanciamento(sim.id, { nome: 'A' })
+    const b = criarFinanciamento(sim.id, { nome: 'B' })
+    const { result, queryClient } = await comListaCarregada()
+    semear(queryClient, [a.id, b.id])
+    await executar(() => result.current.excluir.mutateAsync(a.id))
+    expect(queryClient.getQueryData(chavesSimulacoes.parcelas(sim.id, a.id))).toBeUndefined()
+    expect(queryClient.getQueryData(chavesSimulacoes.parcelas(sim.id, b.id))).toBeDefined()
+  })
+
+  it('o 404 do DELETE (já excluída) também remove as parcelas; a falha de rede NÃO (controle)', async () => {
+    const a = criarFinanciamento(sim.id, { nome: 'A' })
+    const { result, queryClient } = await comListaCarregada()
+    semear(queryClient, [a.id])
+    servidor.use(http.delete(`${BASE}/simulacoes/${sim.id}/financiamentos/${a.id}`, () => HttpResponse.error()))
+    await executar(() => result.current.excluir.mutateAsync(a.id).catch(() => {}))
+    expect(queryClient.getQueryData(chavesSimulacoes.parcelas(sim.id, a.id))).toBeDefined() // rede: nada mudou
+
+    servidor.resetHandlers(...handlers)
+    banco.financiamentos = []
+    await executar(() => result.current.excluir.mutateAsync(a.id))
+    expect(queryClient.getQueryData(chavesSimulacoes.parcelas(sim.id, a.id))).toBeUndefined() // 404 = sucesso
+  })
+
+  it('criar uma opção não mexe nas parcelas das outras (controle)', async () => {
+    const a = criarFinanciamento(sim.id, { nome: 'A' })
+    const { result, queryClient } = await comListaCarregada()
+    semear(queryClient, [a.id])
+    await executar(() => result.current.criar.mutateAsync(CORPO))
+    expect(queryClient.getQueryState(chavesSimulacoes.parcelas(sim.id, a.id)).isInvalidated).toBe(false)
+  })
+
+  it('excluir a SIMULAÇÃO leva junto as parcelas de todas as opções (mesmo prefixo)', async () => {
+    const a = criarFinanciamento(sim.id, { nome: 'A' })
+    const { result, queryClient } = renderizarHookComAuth(
+      () => ({ lista: useFinanciamentos(sim.id), excluir: useExcluirSimulacao() }),
+      { token, queryClient: producao() },
+    )
+    await waitFor(() => expect(result.current.lista.isSuccess).toBe(true))
+    semear(queryClient, [a.id])
+    await executar(() => result.current.excluir.mutateAsync(sim.id))
+    expect(queryClient.getQueryData(chavesSimulacoes.parcelas(sim.id, a.id))).toBeUndefined()
+  })
+})

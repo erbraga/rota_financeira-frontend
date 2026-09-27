@@ -1,0 +1,522 @@
+{
+  "financiamento": {
+    "id": 1,
+    "nome": "Banco Exemplo Centavos 72x",
+    "prazo_meses": 72,
+    "sistema_amortizacao": "PRICE",
+    "taxa_juros_mensal": 1.5,
+    "valor_entrada": 94999.99,
+    "valor_financiado": 0.01
+  },
+  "parcelas": [
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 1,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 2,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 3,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 4,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 5,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 6,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 7,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 8,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 9,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 10,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 11,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 12,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 13,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 14,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 15,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 16,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 17,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 18,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 19,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 20,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 21,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 22,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 23,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 24,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 25,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 26,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 27,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 28,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 29,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 30,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 31,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 32,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 33,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 34,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 35,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 36,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 37,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 38,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 39,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 40,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 41,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 42,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 43,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 44,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 45,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 46,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 47,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 48,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 49,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 50,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 51,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 52,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 53,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 54,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 55,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 56,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 57,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 58,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 59,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 60,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 61,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 62,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 63,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 64,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 65,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 66,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 67,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 68,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 69,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 70,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 71,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.0
+    },
+    {
+      "amortizacao": 0.01,
+      "juros": 0.0,
+      "numero": 72,
+      "saldo_devedor": 0.0,
+      "valor_parcela": 0.01
+    }
+  ],
+  "totais": {
+    "custo_total": 95000.0,
+    "total_juros": 0.0,
+    "total_pago": 0.01
+  }
+}

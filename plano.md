@@ -158,15 +158,19 @@ antecipado depois da 3 se sobrar tempo, mas o teste final é com o app completo.
 **Notas:** 1381 testes em 59 arquivos; nenhuma dependência nova nem ícone novo (continuam os 5); **bundle 1.126 kB** (o Recharts entrou; o build já avisa de chunk grande e a divisão do código fica como possibilidade da Etapa 8). Decisões do autor: detalhes dentro do cartão, sempre visíveis; campo do aporte no cartão do fundo com o valor no endereço; um único gráfico com legenda clicável; texto fixo do custo total mais etiqueta e borda; link "Ver parcelas" já nesta etapa. Nomes finais (diferentes dos previstos): `DadosDaSimulacao` virou o cabeçalho de `Resultado.jsx`; entraram `SimulacaoNaoEncontrada` (extraído da edição), `utils/aporteNaUrl.js` e `utils/serieDoGrafico.js`. Achados do backend real: `menor_custo` só assume `a_vista` ou `fundo`, empate vai para o à vista, o fundo vence com IPCA negativo, três mensagens do aporte diferiam dos mocks (corrigidas), `saldo_devedor` vem `{}` sem opções. A Etapa 7 herda os links "Ver parcelas" e o `formatarMes`/`formatarPrazo`.
 
 ## Etapa 7 — Tela de amortização
-**Arquivos:** `src/api/parcelas.js` (ou em `financiamentos.js`), `src/hooks/useParcelas.js`, `src/pages/Amortizacao.jsx`, `src/components/{TabelaAmortizacao,ResumoFinanciamento}.jsx`
+**Status: concluída em 2026-09-27** (spec: `docs/specs/2026-09-27-tabela-de-amortizacao.md`).
+**Arquivos:** `src/api/parcelas.js`, `src/hooks/useParcelas.js`, `src/pages/Amortizacao.jsx`, `src/components/{TabelaAmortizacao,ResumoFinanciamento,GraficoAmortizacao}.jsx`, `src/utils/serieDaAmortizacao.js`
 
-- [ ] `GET /api/simulacoes/:id/financiamentos/:fid/parcelas` → `{financiamento, parcelas, totais}`: uma linha por mês (parcela, juros, amortização e `saldo_devedor` **após** o pagamento), exibida como vem (parcelas 0,00 após quitação antecipada incluídas).
-- [ ] Cabeçalho com dados da opção (nome, sistema, taxa % a.m., prazo, valor financiado) e linha de **totais** vinda da API.
-- [ ] Tabela com rolagem horizontal no celular, cabeçalho fixo, valores em reais e, se ajudar a leitura, mini-gráfico da amortização (extra do R4).
-- [ ] 404 (simulação ou opção inexistente/alheia) e carregamento/erro tratados; botão de voltar ao resultado.
-- [ ] Ordem de erros: dono da simulação (404) → opção (404).
+- [x] `GET /api/simulacoes/:id/financiamentos/:fid/parcelas` → `{financiamento, parcelas, totais}`: uma linha por mês (parcela, juros, amortização e `saldo_devedor` **depois** do pagamento), exibida como vem (parcelas 0,00 por centavos ou quitação antecipada incluídas, com uma nota que as explica).
+- [x] Resumo acima da tabela com os dados da opção (nome, sistema, taxa em **% a.m.**, prazo, valor financiado e entrada) e os **totais** vindos da API (total pago, total de juros e custo total), com a frase do custo total.
+- [x] Tabela num quadro de altura limitada (~60 % da tela) com **cabeçalho fixo** e rolagem horizontal no celular, valores em reais alinhados à direita e o quadro focável por teclado.
+- [x] Gráfico de barras empilhadas (extra do R4): **amortização** e **juros** de cada parcela, com cor e padrão diferentes, legenda, tooltip e resumo em texto.
+- [x] 404 (simulação ou opção inexistente ou alheia) com o **mesmo** estado que a edição e o resultado, carregamento e erro tratados; links **Voltar ao resultado** e **Editar simulação**.
+- [x] Ordem de erros: dono da simulação (404) → opção (404); parâmetros extras ignorados, como no backend.
+- [x] Cache das parcelas por opção, invalidado ao editar a opção ou a simulação e removido ao excluir a opção.
 
-**Validar:** teste da tabela com fixture (linhas e totais como vêm); no navegador: Price e SAC de uma simulação real, comparando primeira/última parcela e totais com o `/resultado`.
+**Validado:** testes das fixtures reais (Price 48x, SAC 36x, sem juros, 1 mês, centavos e quitação antecipada: número de linhas, texto exato de cada valor, totais como vêm, nota só com linha zerada), dos hooks e do cache e da tela (estados e os quatro 404 iguais); paridade automática com o backend real (45 checagens: formato, totais iguais aos do `/resultado`, os 404, a edição mudando as parcelas); no navegador pelo autor (12 itens: números iguais aos do Swagger, cabeçalho fixo, gráfico, casos extremos, atualização depois de mudar, erros e celular).
+**Notas:** 1517 testes em 66 arquivos; nenhuma dependência nova nem ícone novo (continuam os 5); bundle 1.162 kB (+3,2 %). Decisões do autor: quadro com rolagem e cabeçalho fixo; gráfico de barras empilhadas; totais num bloco de resumo acima (sem linha de totais na tabela); só voltar ao resultado (sem seletor de opção). Nomes finais: `api/parcelas.js` em arquivo próprio e `utils/serieDaAmortizacao.js`; o `EmConstrucao` foi removido (nenhuma tela provisória resta). Achados do backend real: os totais do `/parcelas` são idênticos aos do `/resultado`, o `/parcelas` ignora parâmetros extras (o `/resultado` os recusa) e há dois casos extremos (71 parcelas de R$ 0,00 com financiado de R$ 0,01 em 72x, e quitação antecipada com financiado de R$ 0,02 em 3x).
 
 ## Etapa 8 — Tratamento de erros, responsividade e ajustes finais
 **Arquivos:** `src/components/{ErrorBoundary,Aviso,EstadoErro,Carregando}.jsx`, `src/pages/NaoEncontrada.jsx`, ajustes transversais, `src/theme.js`

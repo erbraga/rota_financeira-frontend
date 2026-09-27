@@ -1,0 +1,522 @@
+{
+  "financiamento": {
+    "id": 1,
+    "nome": "Banco Exemplo Sem Juros 72x",
+    "prazo_meses": 72,
+    "sistema_amortizacao": "PRICE",
+    "taxa_juros_mensal": 0.0,
+    "valor_entrada": 0.0,
+    "valor_financiado": 95000.0
+  },
+  "parcelas": [
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 1,
+      "saldo_devedor": 93680.56,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 2,
+      "saldo_devedor": 92361.12,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 3,
+      "saldo_devedor": 91041.68,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 4,
+      "saldo_devedor": 89722.24,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 5,
+      "saldo_devedor": 88402.8,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 6,
+      "saldo_devedor": 87083.36,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 7,
+      "saldo_devedor": 85763.92,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 8,
+      "saldo_devedor": 84444.48,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 9,
+      "saldo_devedor": 83125.04,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 10,
+      "saldo_devedor": 81805.6,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 11,
+      "saldo_devedor": 80486.16,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 12,
+      "saldo_devedor": 79166.72,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 13,
+      "saldo_devedor": 77847.28,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 14,
+      "saldo_devedor": 76527.84,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 15,
+      "saldo_devedor": 75208.4,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 16,
+      "saldo_devedor": 73888.96,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 17,
+      "saldo_devedor": 72569.52,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 18,
+      "saldo_devedor": 71250.08,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 19,
+      "saldo_devedor": 69930.64,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 20,
+      "saldo_devedor": 68611.2,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 21,
+      "saldo_devedor": 67291.76,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 22,
+      "saldo_devedor": 65972.32,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 23,
+      "saldo_devedor": 64652.88,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 24,
+      "saldo_devedor": 63333.44,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 25,
+      "saldo_devedor": 62014.0,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 26,
+      "saldo_devedor": 60694.56,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 27,
+      "saldo_devedor": 59375.12,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 28,
+      "saldo_devedor": 58055.68,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 29,
+      "saldo_devedor": 56736.24,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 30,
+      "saldo_devedor": 55416.8,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 31,
+      "saldo_devedor": 54097.36,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 32,
+      "saldo_devedor": 52777.92,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 33,
+      "saldo_devedor": 51458.48,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 34,
+      "saldo_devedor": 50139.04,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 35,
+      "saldo_devedor": 48819.6,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 36,
+      "saldo_devedor": 47500.16,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 37,
+      "saldo_devedor": 46180.72,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 38,
+      "saldo_devedor": 44861.28,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 39,
+      "saldo_devedor": 43541.84,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 40,
+      "saldo_devedor": 42222.4,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 41,
+      "saldo_devedor": 40902.96,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 42,
+      "saldo_devedor": 39583.52,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 43,
+      "saldo_devedor": 38264.08,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 44,
+      "saldo_devedor": 36944.64,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 45,
+      "saldo_devedor": 35625.2,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 46,
+      "saldo_devedor": 34305.76,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 47,
+      "saldo_devedor": 32986.32,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 48,
+      "saldo_devedor": 31666.88,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 49,
+      "saldo_devedor": 30347.44,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 50,
+      "saldo_devedor": 29028.0,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 51,
+      "saldo_devedor": 27708.56,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 52,
+      "saldo_devedor": 26389.12,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 53,
+      "saldo_devedor": 25069.68,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 54,
+      "saldo_devedor": 23750.24,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 55,
+      "saldo_devedor": 22430.8,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 56,
+      "saldo_devedor": 21111.36,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 57,
+      "saldo_devedor": 19791.92,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 58,
+      "saldo_devedor": 18472.48,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 59,
+      "saldo_devedor": 17153.04,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 60,
+      "saldo_devedor": 15833.6,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 61,
+      "saldo_devedor": 14514.16,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 62,
+      "saldo_devedor": 13194.72,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 63,
+      "saldo_devedor": 11875.28,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 64,
+      "saldo_devedor": 10555.84,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 65,
+      "saldo_devedor": 9236.4,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 66,
+      "saldo_devedor": 7916.96,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 67,
+      "saldo_devedor": 6597.52,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 68,
+      "saldo_devedor": 5278.08,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 69,
+      "saldo_devedor": 3958.64,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 70,
+      "saldo_devedor": 2639.2,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.44,
+      "juros": 0.0,
+      "numero": 71,
+      "saldo_devedor": 1319.76,
+      "valor_parcela": 1319.44
+    },
+    {
+      "amortizacao": 1319.76,
+      "juros": 0.0,
+      "numero": 72,
+      "saldo_devedor": 0.0,
+      "valor_parcela": 1319.76
+    }
+  ],
+  "totais": {
+    "custo_total": 95000.0,
+    "total_juros": 0.0,
+    "total_pago": 95000.0
+  }
+}

@@ -3,7 +3,8 @@ import { atualizarFinanciamento } from '../api/financiamentos.js'
 import { chavesSimulacoes } from './chavesSimulacoes.js'
 
 // Salvar uma opção (PUT /simulacoes/:id/financiamentos/:fid, corpo completo). Troca a opção da lista em cache pela que o
-// servidor devolveu (mesmo id, mesma posição, sem novo GET) e invalida o resultado. Sem repetição. Um 404 (a opção foi
+// servidor devolveu (mesmo id, mesma posição, sem novo GET) e invalida o resultado e as parcelas DESTA opção (a tabela de
+// amortização depende dos dados dela). Sem repetição. Um 404 (a opção foi
 // excluída em outra aba) sobe como erro: quem chama fecha o formulário e atualiza a lista.
 export function useAtualizarFinanciamento(simulacaoId) {
   const queryClient = useQueryClient()
@@ -13,7 +14,10 @@ export function useAtualizarFinanciamento(simulacaoId) {
       queryClient.setQueryData(chavesSimulacoes.financiamentos(simulacaoId), (lista) =>
         lista ? { ...lista, itens: lista.itens.map((f) => (f.id === atualizada.id ? atualizada : f)) } : lista,
       )
-      return queryClient.invalidateQueries({ queryKey: chavesSimulacoes.resultado(simulacaoId) })
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: chavesSimulacoes.resultado(simulacaoId) }),
+        queryClient.invalidateQueries({ queryKey: chavesSimulacoes.parcelas(simulacaoId, atualizada.id) }),
+      ])
     },
   })
 }

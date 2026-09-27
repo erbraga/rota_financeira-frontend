@@ -11,6 +11,14 @@ import parcelasSac from '../fixtures/parcelas-sac.json'
 import { servidor } from '../servidor.js'
 import { handlers } from './index.js'
 import { indiceDesatualizado, indiceIndisponivel, INDICES, indiceSemSugestao } from './indices.js'
+import {
+  FIXTURES_DE_PARCELAS,
+  parcelasDeCentavos,
+  parcelasDeUmMes,
+  parcelasIndisponivel,
+  parcelasQuitacaoAntecipada,
+  parcelasSemJuros,
+} from './parcelas.js'
 import { FIXTURES_DE_RESULTADO, resultadoFundoVence, resultadoIndisponivel, resultadoSemOpcoes, resultadoTresOpcoes } from './resultado.js'
 
 let ana
@@ -328,6 +336,96 @@ describe('GET /indices/:indice', () => {
       expect(r.status).toBe(200)
       expect(r.corpo.desatualizado).toBe(false)
       expect(r.corpo.sugestao).not.toBeNull()
+    })
+  })
+})
+
+// Acesso e atalhos do /parcelas, com os literais do backend REAL (conta descartável, 2026-09-27): a referência são estes
+// literais, nunca o próprio handler.
+describe('GET /simulacoes/:id/financiamentos/:fid/parcelas igual ao backend real', () => {
+  const caminho = (simulacaoId = cenario.simulacao.id, fid = cenario.financiamentos[0].id) =>
+    `/simulacoes/${simulacaoId}/financiamentos/${fid}/parcelas`
+  const consultar = (url = caminho(), token = tokenAna) => chamar('GET', url, { token })
+
+  it('401 sem token', async () => {
+    expect((await chamar('GET', caminho())).status).toBe(401)
+  })
+
+  it.each([
+    ['simulação inexistente', () => caminho(999999), 'Simulação não encontrada'],
+    ['simulação com id 0', () => caminho(0), 'Simulação não encontrada'],
+    ['opção inexistente', () => caminho(undefined, 999999), 'Opção de financiamento não encontrada'],
+    ['opção com id 0', () => caminho(undefined, 0), 'Opção de financiamento não encontrada'],
+    ['simulação com id não numérico', () => caminho('abc'), 'Recurso não encontrado'],
+    ['opção com id não numérico', () => caminho(undefined, 'abc'), 'Recurso não encontrado'],
+  ])('%s -> 404 "%s"', async (_rotulo, url, mensagem) => {
+    const r = await consultar(url())
+    expect(r.status).toBe(404)
+    expect(r.corpo).toEqual({ erro: mensagem })
+  })
+
+  it('a simulação de OUTRA pessoa dá o mesmo 404 da inexistente', async () => {
+    const r = await consultar(caminho(), tokenBia)
+    expect(r.status).toBe(404)
+    expect(r.corpo).toEqual({ erro: 'Simulação não encontrada' })
+  })
+
+  it('a opção de OUTRA simulação (da mesma dona) dá o 404 da opção inexistente', async () => {
+    const outra = criarSimulacao(ana.id)
+    const r = await consultar(caminho(outra.id, cenario.financiamentos[0].id))
+    expect(r.status).toBe(404)
+    expect(r.corpo).toEqual({ erro: 'Opção de financiamento não encontrada' })
+  })
+
+  it('a ordem é 401 -> simulação -> opção (simulação e opção inexistentes juntas dão o 404 da simulação)', async () => {
+    const r = await consultar(caminho(999999, 999999))
+    expect(r.corpo).toEqual({ erro: 'Simulação não encontrada' })
+  })
+
+  it('parâmetros de consulta são IGNORADOS (200 com ?foo=1), ao contrário do /resultado', async () => {
+    const r = await consultar(`${caminho()}?foo=1`)
+    expect(r.status).toBe(200)
+    expect(r.corpo).toEqual(FIXTURES_DE_PARCELAS.price)
+  })
+
+  it('Price devolve a fixture Price e SAC devolve a SAC (controle: são diferentes)', async () => {
+    const [price, sac] = cenario.financiamentos
+    expect((await consultar(caminho(undefined, price.id))).corpo).toEqual(FIXTURES_DE_PARCELAS.price)
+    expect((await consultar(caminho(undefined, sac.id))).corpo).toEqual(FIXTURES_DE_PARCELAS.sac)
+    expect(FIXTURES_DE_PARCELAS.price).not.toEqual(FIXTURES_DE_PARCELAS.sac)
+  })
+
+  describe('atalhos de teste', () => {
+    it.each([
+      ['parcelasSemJuros', parcelasSemJuros, FIXTURES_DE_PARCELAS.semJuros],
+      ['parcelasDeUmMes', parcelasDeUmMes, FIXTURES_DE_PARCELAS.umMes],
+      ['parcelasDeCentavos', parcelasDeCentavos, FIXTURES_DE_PARCELAS.centavos],
+      ['parcelasQuitacaoAntecipada', parcelasQuitacaoAntecipada, FIXTURES_DE_PARCELAS.quitacaoAntecipada],
+    ])('%s devolve a fixture real correspondente', async (_nome, atalho, fixture) => {
+      servidor.use(atalho())
+      const r = await consultar()
+      expect(r.status).toBe(200)
+      expect(r.corpo).toEqual(fixture)
+      expect(r.corpo).not.toEqual(FIXTURES_DE_PARCELAS.price)
+    })
+
+    it('os atalhos mantêm as regras de acesso (401 e os dois 404)', async () => {
+      servidor.use(parcelasSemJuros())
+      expect((await chamar('GET', caminho())).status).toBe(401)
+      expect((await consultar(caminho(999999))).corpo).toEqual({ erro: 'Simulação não encontrada' })
+      expect((await consultar(caminho(undefined, 999999))).corpo).toEqual({ erro: 'Opção de financiamento não encontrada' })
+      expect((await consultar(caminho(), tokenBia)).status).toBe(404)
+    })
+
+    it('parcelasIndisponivel: 503 com a mensagem genérica', async () => {
+      servidor.use(parcelasIndisponivel())
+      const r = await consultar()
+      expect(r.status).toBe(503)
+      expect(r.corpo).toEqual({ erro: 'Serviço indisponível' })
+    })
+
+    it('sem atalho, o comportamento volta ao normal (controle)', async () => {
+      expect((await consultar()).corpo).toEqual(FIXTURES_DE_PARCELAS.price)
     })
   })
 })

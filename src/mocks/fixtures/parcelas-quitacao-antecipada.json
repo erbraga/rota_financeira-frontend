@@ -1,0 +1,39 @@
+{
+  "financiamento": {
+    "id": 1,
+    "nome": "Banco Exemplo Quitação Antecipada 3x",
+    "prazo_meses": 3,
+    "sistema_amortizacao": "PRICE",
+    "taxa_juros_mensal": 1.5,
+    "valor_entrada": 94999.98,
+    "valor_financiado": 0.02
+  },
+  "parcelas": [
+    {
+      "amortizacao": 0.01,
+      "juros": 0.0,
+      "numero": 1,
+      "saldo_devedor": 0.01,
+      "valor_parcela": 0.01
+    },
+    {
+      "amortizacao": 0.01,
+      "juros": 0.0,
+      "numero": 2,
+      "saldo_devedor": 0.0,
+      "valor_parcela": 0.01
+    },
+    {
+      "amortizacao": 0.0,
+      "juros": 0.0,
+      "numero": 3,
+      "saldo_devedor": 0.0,
+      "valor_parcela": 0.0
+    }
+  ],
+  "totais": {
+    "custo_total": 95000.0,
+    "total_juros": 0.0,
+    "total_pago": 0.02
+  }
+}
