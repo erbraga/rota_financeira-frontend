@@ -119,7 +119,7 @@ dependem da 3 e podem trocar de ordem. O Dockerfile (10) só precisa de um build
 - [x] `desatualizado: true` → aviso discreto; `sugestao: null`, **503** e falha de rede → aviso e digitação manual, com **Tentar de novo** (a criação **não depende** do BACEN); nunca bloqueia o formulário.
 - [x] Ao **editar**, os valores gravados nunca são sobrescritos: a sugestão é só informação e o botão **Usar** é a única forma de mudar o campo.
 - [x] Não sobrescreve o que o usuário já digitou (nem o campo em que digitou, apagou e saiu) se a resposta chegar depois.
-- [ ] (Extra do R4) miniatura da série (`pontos`) do índice: **fora desta etapa por decisão do autor** (fica para a Etapa 6 ou, se sobrar tempo, a 8; os pontos já vêm da mesma chamada, basta mudar o `periodo`).
+- [x] ~~(Extra do R4) miniatura da série (`pontos`) do índice~~ **Nunca retomada (revisão final, Etapa 12, 2026-09-27):** ficou adiada para a Etapa 6 ou 8 "se sobrar tempo" e nenhuma das duas a pegou; não é requisito formal (R1–R6, todos atendidos sem ela), então fica de fora da entrega — mesmo status de "pulada" da Etapa 9, só que como um extra pontual em vez de uma etapa inteira.
 
 **Validado:** testes com MSW (sugestão aplicada, edição preservada, `desatualizado`, `sugestao: null`, 503, resposta tardia, cache); no navegador pelo autor: o formulário novo já vem preenchido, o valor digitado é mantido, o backend parado mostra o aviso com **Tentar de novo**, criar com a sugestão leva à edição com as taxas salvas, o cache evita repetir a chamada e o celular quebra a linha de apoio.
 **Notas:** 931 testes em 42 arquivos; nenhuma dependência nova nem ícone novo (continuam os 5). Decisões do autor: mostrar a sugestão também na edição, só como informação; linha de apoio abaixo do campo com botão de texto; sem miniatura da série; texto do IPCA sempre visível. O componente se chama `SugestaoDeTaxa` (no lugar de `CampoTaxaSugerida` e `AvisoIndice`). Achados do backend real (mocks corrigidos): `periodo` repetido → `"Informe o parâmetro uma única vez."` e parâmetro desconhecido → `"Campo desconhecido."`; a resposta do CDI com `periodo=12m` tem ~15,7 kB e com `1m`, ~1,6 kB; a `sugestao` não depende do período. Verificação automática: 26 checagens contra o backend real, 0 diferenças, e o POST com as taxas sugeridas vai como número (`13.65`). A Etapa 5 herda o `FormularioSimulacao` com `sugestoes` e o padrão de linha de apoio.
@@ -228,17 +228,20 @@ docker run -d --name rota-financeira-web -p 8080:8080 rota-financeira-web
 **Validado:** "pasta limpa" simulada com exatamente o conjunto de arquivos que o próximo commit levaria (`git ls-files` + não rastreados, sem `node_modules`/`dist`/o que o `.gitignore` exclui), num diretório temporário. A partir dela, os seis comandos locais do README (`npm install`, `cp .env.example .env`, `npm run dev` — responde 200 na 5173 —, `npm test` — 1591/1591 —, `npm run lint`, `npm run build`) e os dois comandos de Docker (`docker build`, `docker run`, copiados literalmente do README) funcionaram sem nenhum ajuste: `http://localhost:8080/` e `http://localhost:8080/simulacoes` (fallback) responderam 200. Diretório temporário, contêiner e imagem de teste removidos ao fim.
 
 ## Etapa 12 — Revisão final e entrega
+**Status: concluída em 2026-09-27** (spec: `docs/specs/2026-09-27-revisao-final.md`; T1–T10 executadas, falta T11, com o autor).
 **Arquivos:** `CLAUDE.md`, `README.md`, `plano.md`, repositório
 
-- [ ] Remover a pasta `api/` do repositório publicado (já no `.gitignore`) e conferir que não há segredos, `.env` nem arquivos do backend no histórico.
-- [ ] Nomes conforme o R6: componentes e páginas em `PascalCase.jsx`, hooks em `useAlgo.js`, demais módulos em `camelCase`, pastas em minúsculas; nada fora do padrão.
-- [ ] Estrutura de pastas clara e igual à descrita no `CLAUDE.md` e no README (atualizar o que mudou).
-- [ ] Checklist dos requisitos: R1 (4 métodos exercitados pela interface), R2/R5 (README + fluxograma), R3 (Dockerfile testado), R4 (gráficos, cartões, feedback visual, sugestão de taxas, modo de aporte), R6 (repositório público separado).
-- [ ] Suíte completa: `npm test`, `npm run lint`, `npm run build`, `docker build`; roteiro manual ponta a ponta contra o backend real e em celular.
-- [ ] Atualizar o `CLAUDE.md` (situação dos requisitos, contagem de testes, estado atual) e marcar este plano como concluído.
-- [ ] Você faz o commit e o push final para o GitHub (repositório público); depois conferir a página no navegador, sem login no GitHub.
+- [x] A pasta `api/` **nunca esteve** no repositório publicado (`git log --all -- api/` vazio, não uma remoção — ela nunca foi commitada); `git log --all` inteiro (não só o estado atual) conferido sem segredo, `.env` nem arquivo do backend.
+- [x] Nomes conforme o R6 conferidos de novo sobre o `src/` atual: nenhuma violação (só `chavesSimulacoes.js`, um módulo de chaves de cache em `hooks/`, não um hook — nome já em `camelCase`, a regra certa para ele).
+- [x] Estrutura de pastas confere com o `CLAUDE.md` e o README.
+- [x] Checklist dos requisitos com evidência (não "de memória"): ver "Situação" no `CLAUDE.md`.
+- [x] Suíte completa (`npm test`, `npm run lint`, `npm run build`, `docker build`/`docker run`) rodada a partir de um **clone público de verdade** (`git clone` de `github.com/erbraga/rota_financeira-frontend`, mesmo commit do local) — tudo verde, sem nenhum ajuste.
+- [x] `CLAUDE.md` atualizado (situação dos requisitos reescrita, estado atual com a Etapa 12) e este `plano.md` marcado.
+- [x] Roteiro manual final ponta a ponta contra o backend real e em celular, pelo autor: funcionou (depois de corrigir um `.env` LOCAL desatualizado — ver nota abaixo).
+- [ ] Commit e push final — **pendente, com o autor** (T11 da spec).
 
-**Validar:** clone limpo, README seguido do zero, todos os comandos verdes, requisitos marcados como atendidos no `CLAUDE.md`.
+**Validado:** clone público real (não uma simulação local) seguindo o README do zero — `npm install`, `cp .env.example .env`, `npm run dev` (200 na 5173), `npm test` (1591/1591), `npm run lint` (0 avisos), `npm run build`, `docker build` e `docker run` (200 na raiz e no fallback `/simulacoes`) — tudo funcionou exatamente como documentado. Contêiner, imagem e diretório de teste removidos ao fim. Roteiro manual (registrar → login → criar simulação → opções → resultado → amortização → excluir, e celular) confirmado pelo autor.
+**Nota:** durante o roteiro manual, o `.env` LOCAL (não versionado) estava com `VITE_API_URL=http://localhost:8080/api` (porta do contêiner Docker, de um teste anterior) em vez de `http://localhost:5000/api` (o backend real) — um resíduo de edição manual, não um bug do projeto. Sintoma: "Não foi possível falar com o servidor" com erro de CORS no console. Corrigido o `.env` e reiniciado o `npm run dev`.
 
 ---
 
