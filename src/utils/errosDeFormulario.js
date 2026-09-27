@@ -3,6 +3,8 @@ import { ehErroApi, ehErroRede } from '../api/erros.js'
 
 export const MENSAGEM_ERRO_INESPERADO = 'Ocorreu um erro inesperado. Tente novamente.'
 
+// campos: a lista de campos do formulário que têm o MESMO nome na API (['email', 'senha']) ou um MAPA
+// { campo_da_api: campoDoFormulario } quando os nomes diferem ({ valor_veiculo: 'valorVeiculo' }).
 // Cada chave de "detalhes" que é campo do formulário vira setError(campo, ...) com a 1ª mensagem.
 // Devolve a MENSAGEM GERAL a mostrar acima do formulário, ou null se tudo foi para os campos:
 //  - erro da API sem detalhes (ex.: 409, 401): o "erro" do backend;
@@ -16,11 +18,13 @@ export function aplicarErrosDoServidor(erro, setError, campos) {
   const detalhes = erro.detalhes
   if (!detalhes || Object.keys(detalhes).length === 0) return erro.erro
 
+  const mapa = Array.isArray(campos) ? Object.fromEntries(campos.map((campo) => [campo, campo])) : campos
+
   let sobrou = false
-  for (const [campo, mensagens] of Object.entries(detalhes)) {
+  for (const [campoDaApi, mensagens] of Object.entries(detalhes)) {
     const mensagem = Array.isArray(mensagens) ? mensagens[0] : mensagens
-    if (campos.includes(campo) && typeof mensagem === 'string') {
-      setError(campo, { type: 'servidor', message: mensagem })
+    if (Object.hasOwn(mapa, campoDaApi) && typeof mensagem === 'string') {
+      setError(mapa[campoDaApi], { type: 'servidor', message: mensagem })
     } else {
       sobrou = true
     }

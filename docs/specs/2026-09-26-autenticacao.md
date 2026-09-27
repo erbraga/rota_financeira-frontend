@@ -197,7 +197,7 @@ Sem decisões em aberto: a spec está pronta para o `/plan`.
 
 ## Plano de Implementação
 
-**Status:** executado em 2026-09-26 (T1 a T17; T18 e T19 são do commit e da confirmação) · **Criado em:** 2026-09-26
+**Status:** executado em 2026-09-26 (T1 a T19) · **Criado em:** 2026-09-26
 
 São 19 tarefas pequenas, em cinco blocos. Cada uma indica **quem executa** (**Claude** ou **Você**), os arquivos, o que
 muda e como validar. O código de cada módulo nasce **junto com os seus testes** (`*.test.js(x)` ao lado). Regras para todo o plano:
@@ -362,4 +362,5 @@ T11 e T12 usam T5, T6, T7 e T9; T13 fecha a ligação de tudo. A T16 (navegador)
 - **Desvios do plano:** (1) o `AuthProvider` **não navega** em `sair`/`aoExpirar`: só encerra a sessão e guarda `aviso` no contexto; a `RotaProtegida` é o único redirecionamento ao login. Com dois redirecionamentos, o segundo apagava o `state` do primeiro e o aviso se perdia. (2) Depois do login o **`SoVisitantes`** é o único a redirecionar (destino seguro em `utils/destino.js`); a tela de login só chama `entrar`. (3) Os avisos da sessão (saiu, sessão expirada) ficam no contexto e não no estado da rota; o de conta criada continua no estado da rota (vem do Registro, sem sessão envolvida). (4) O cadastro tem **dois** botões de olho (um por campo) ligados ao mesmo estado, em vez de um só. (5) `hooks/useRegistrar.js` foi criado para a página não chamar a API direto (regra do projeto). (6) A T13 foi feita antes das T11 e T12, para a suíte não ficar vermelha entre as tarefas.
 - **Descobertas do backend real:** o login valida o formato do e-mail (422 "E-mail inválido."), a senha do login tem mensagem própria (1 a 128), só o esquema exato `Bearer` conta e o 401 do login não traz `WWW-Authenticate`. Os mocks estavam diferentes nesses pontos e foram corrigidos (T2).
 - **Verificação no navegador (T16, pelo autor):** os 11 itens passaram.
+- **Publicação (T18 e T19):** commit `d537dbf`. O GitHub tem os 101 arquivos rastreados (os mesmos do disco), com `src/auth/`, `src/schemas/` e `src/hooks/`, e sem o `EstadoApi`. **Verificação do zero:** clone do repositório público numa pasta limpa, com `npm ci`, `npm ls`, `lint` (0 avisos), `test` (516 em 26 arquivos) e `build` verdes; `dist/` sem `.env`, `mockServiceWorker.js` nem dados de teste.
 

@@ -4,6 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import AuthProvider from './auth/AuthProvider.jsx'
+import AvisosProvider from './avisos/AvisosProvider.jsx'
 import TelaConfiguracao from './components/TelaConfiguracao.jsx'
 import { queryClient } from './queryClient.js'
 import { theme } from './theme.js'
@@ -18,11 +19,13 @@ export default function Raiz({ erroConfig }) {
         <TelaConfiguracao erro={erroConfig} />
       ) : (
         <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <AuthProvider>
-              <App />
-            </AuthProvider>
-          </BrowserRouter>
+          <AvisosProvider>
+            <BrowserRouter>
+              <AuthProvider>
+                <App />
+              </AuthProvider>
+            </BrowserRouter>
+          </AvisosProvider>
         </QueryClientProvider>
       )}
     </ThemeProvider>

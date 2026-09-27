@@ -31,6 +31,7 @@ describe('Raiz', () => {
     render(<Raiz />)
     expect(await screen.findByRole('heading', { level: 1, name: 'Minhas simulações' })).toBeInTheDocument()
     expect(screen.getByText('Ana Souza')).toBeInTheDocument()
+    await screen.findByText('Nenhuma simulação ainda')
   })
 
   it('com a configuração inválida, mostra a tela de configuração e NÃO chama a API', async () => {

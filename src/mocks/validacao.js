@@ -1,5 +1,6 @@
 // Validação de corpo dos mocks, no espírito do backend (campos obrigatórios, faixas, casas decimais,
-// campos desconhecidos rejeitados). As mensagens são aproximações das reais.
+// campos desconhecidos rejeitados). As mensagens de auth e de simulação são as do backend real (conferidas em 2026-09-26);
+// as de financiamento ainda são aproximações (a Etapa 5 as confere).
 import { respostaErro } from './erros.js'
 
 const ID_MAXIMO = 2_147_483_647
@@ -33,9 +34,11 @@ function casasDecimais(valor) {
   return texto.includes('.') ? texto.split('.')[1].length : 0
 }
 
+// Número JSON ou texto numérico (o backend aceita ambos em dinheiro e taxas; aceita até notação científica,
+// que cai na mensagem de faixa, como "1e999999").
 const ehNumerico = (valor) =>
   (typeof valor === 'number' && Number.isFinite(valor)) ||
-  (typeof valor === 'string' && /^-?\d+(\.\d+)?$/.test(valor.trim()))
+  (typeof valor === 'string' && /^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(valor.trim()))
 
 // Cada regra: { campo, tipo: 'texto'|'numero'|'inteiro'|'sistema'|'email', obrigatorio, min, max, casas, padrao }.
 // Devolve { dados, detalhes } (detalhes = { campo: [mensagens] }, vazio se tudo certo).
@@ -55,7 +58,12 @@ export function validar(corpo, regras) {
       detalhes[campo] = [texto]
     }
 
-    if (valor === undefined || valor === null) {
+    // null é sempre "obrigatório" (o backend recusa valor_entrada: null); só ausente (undefined) cai no padrão.
+    if (valor === null) {
+      mensagem('Campo obrigatório.')
+      continue
+    }
+    if (valor === undefined) {
       if (obrigatorio) mensagem('Campo obrigatório.')
       else if (padrao !== undefined) dados[campo] = padrao
       continue
@@ -65,7 +73,7 @@ export function validar(corpo, regras) {
       // aparar: false preserva espaços (senha). mensagem/mensagemLongo/mensagemFormato imitam as do backend.
       const texto = typeof valor === 'string' && regra.aparar !== false ? valor.trim() : valor
       if (typeof valor !== 'string') {
-        mensagem(tipo === 'email' ? (regra.mensagemFormato ?? 'E-mail inválido.') : 'Deve ser um texto.')
+        mensagem(tipo === 'email' ? (regra.mensagemFormato ?? 'E-mail inválido.') : (regra.mensagemTipo ?? 'Deve ser um texto.'))
       } else if (texto.length > max && regra.mensagemLongo) {
         mensagem(regra.mensagemLongo)
       } else if (texto.length < min || texto.length > max) {
@@ -77,12 +85,14 @@ export function validar(corpo, regras) {
       const maiusculo = typeof valor === 'string' ? valor.trim().toUpperCase() : ''
       if (maiusculo === 'PRICE' || maiusculo === 'SAC') dados[campo] = maiusculo
       else mensagem('O sistema de amortização deve ser PRICE ou SAC.')
+    } else if (tipo === 'inteiro' && !(typeof valor === 'number' && Number.isInteger(valor))) {
+      // O prazo só vale como número inteiro JSON: "12" (texto) e 12.5 são recusados.
+      mensagem('Número inteiro inválido.')
     } else if (!ehNumerico(valor)) {
-      mensagem('Deve ser um número.')
+      mensagem('Número inválido.')
     } else {
       const numero = Number(valor)
-      if (tipo === 'inteiro' && !Number.isInteger(numero)) mensagem('Deve ser um número inteiro.')
-      else if (numero < min || numero > max) mensagem(`Deve estar entre ${min} e ${max}.`)
+      if (numero < min || numero > max) mensagem(regra.mensagem ?? `Deve estar entre ${min} e ${max}.`)
       else if (casas !== undefined && casasDecimais(valor) > casas) {
         mensagem(`Use no máximo ${casas} casas decimais.`)
       } else dados[campo] = numero
@@ -132,12 +142,59 @@ export const regrasLogin = [
 ]
 
 export const regrasSimulacao = [
-  { campo: 'nome', tipo: 'texto', obrigatorio: true, min: 1, max: 120 },
-  { campo: 'valor_veiculo', tipo: 'numero', obrigatorio: true, min: 0.01, max: 9999999, casas: 2 },
-  { campo: 'valor_entrada', tipo: 'numero', min: 0, max: 9999999, casas: 2, padrao: 0 },
-  { campo: 'taxa_ipca_projetada', tipo: 'numero', obrigatorio: true, min: -20, max: 100, casas: 6 },
-  { campo: 'taxa_fundo_rendimento', tipo: 'numero', obrigatorio: true, min: 0, max: 100, casas: 6 },
-  { campo: 'prazo_meses_fundo', tipo: 'inteiro', obrigatorio: true, min: 1, max: 60 },
+  {
+    campo: 'nome',
+    tipo: 'texto',
+    obrigatorio: true,
+    min: 1,
+    max: 120,
+    mensagem: 'O nome deve ter entre 1 e 120 caracteres.',
+    mensagemTipo: 'Nome inválido.',
+  },
+  {
+    campo: 'valor_veiculo',
+    tipo: 'numero',
+    obrigatorio: true,
+    min: 0.01,
+    max: 9999999,
+    casas: 2,
+    mensagem: 'O valor do veículo deve estar entre 0,01 e 9.999.999,00.',
+  },
+  {
+    campo: 'valor_entrada',
+    tipo: 'numero',
+    min: 0,
+    max: 9999999,
+    casas: 2,
+    padrao: 0,
+    mensagem: 'O valor da entrada deve estar entre 0,00 e 9.999.999,00.',
+  },
+  {
+    campo: 'taxa_ipca_projetada',
+    tipo: 'numero',
+    obrigatorio: true,
+    min: -20,
+    max: 100,
+    casas: 6,
+    mensagem: 'A taxa de IPCA projetada deve estar entre -20 e 100.',
+  },
+  {
+    campo: 'taxa_fundo_rendimento',
+    tipo: 'numero',
+    obrigatorio: true,
+    min: 0,
+    max: 100,
+    casas: 6,
+    mensagem: 'A taxa de rendimento do fundo deve estar entre 0 e 100.',
+  },
+  {
+    campo: 'prazo_meses_fundo',
+    tipo: 'inteiro',
+    obrigatorio: true,
+    min: 1,
+    max: 60,
+    mensagem: 'O prazo do fundo (em meses) deve estar entre 1 e 60.',
+  },
 ]
 
 export const regrasFinanciamento = [

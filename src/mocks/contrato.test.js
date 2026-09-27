@@ -73,6 +73,8 @@ describe('formato das respostas dos handlers', () => {
       },
     })
     conferirChaves(criada.corpo, 'Simulacao')
+    // O Location do backend real é relativo ao servidor.
+    expect(criada.cabecalhos.get('Location')).toBe(`/api/simulacoes/${criada.corpo.id}`)
   })
 
   it('financiamentos: lista e criação', async () => {

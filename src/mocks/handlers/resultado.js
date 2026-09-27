@@ -5,7 +5,7 @@ import { lerConfig } from '../../config.js'
 import resultado from '../fixtures/resultado.json'
 import resultadoAporte from '../fixtures/resultado-aporte.json'
 import resultadoAporteInsuficiente from '../fixtures/resultado-aporte-insuficiente.json'
-import { dadosInvalidos, simulacaoNaoEncontrada } from '../erros.js'
+import { dadosInvalidos, simulacaoAusente } from '../erros.js'
 import { autenticar } from '../sessao.js'
 import { validar } from '../validacao.js'
 import { obterSimulacao } from './simulacoes.js'
@@ -41,7 +41,7 @@ export const handlersResultado = [
   http.get(`${urlApi}/simulacoes/:id/resultado`, ({ request, params }) => {
     const { usuario, resposta } = autenticar(request)
     if (resposta) return resposta
-    if (!obterSimulacao(usuario, params.id)) return simulacaoNaoEncontrada()
+    if (!obterSimulacao(usuario, params.id)) return simulacaoAusente(params.id)
 
     const { aporte, detalhes } = lerAporte(new URL(request.url))
     if (detalhes) return dadosInvalidos(detalhes)

@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
+import { configurarSessao } from './api/api.js'
 import { reiniciarTokenStorage } from './auth/tokenStorage.js'
 import { reiniciarBanco } from './mocks/banco.js'
 import { servidor } from './mocks/servidor.js'
@@ -17,6 +18,8 @@ afterEach(() => {
   // Sessão limpa a cada teste (o sessionStorage só existe nos testes em jsdom).
   globalThis.sessionStorage?.clear()
   reiniciarTokenStorage()
+  // O client HTTP não guarda sessão de um teste para o outro.
+  configurarSessao({})
 })
 
 // Servidor MSW para todos os testes: chamada HTTP sem handler quebra o teste e nunca vai à rede real.

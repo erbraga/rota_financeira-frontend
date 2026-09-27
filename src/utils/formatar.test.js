@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   formatarData,
   formatarMoeda,
+  casasDecimais,
+  dinheiroParaCampo,
   formatarPercentual,
   lerNumero,
   MENSAGEM_NUMERO_INVALIDO,
@@ -208,3 +210,48 @@ describe('numeroParaCampo', () => {
     },
   )
 })
+
+describe('dinheiroParaCampo', () => {
+  it.each([
+    [95000.5, '95.000,50'],
+    [0, '0,00'],
+    [20000, '20.000,00'],
+    [0.01, '0,01'],
+    [9999999, '9.999.999,00'],
+    [1234567.89, '1.234.567,89'],
+    [12, '12,00'],
+  ])('%s -> %s', (valor, esperado) => {
+    expect(dinheiroParaCampo(valor)).toBe(esperado)
+  })
+
+  it.each([null, undefined, '', NaN])('%s -> campo vazio', (valor) => {
+    expect(dinheiroParaCampo(valor)).toBe('')
+  })
+
+  it('não usa o espaço sem quebra do Intl de moeda (é só o número)', () => {
+    expect(dinheiroParaCampo(1234.5)).not.toMatch(/[\u00a0R$]/)
+  })
+
+  it.each([95000.5, 0, 0.01, 9999999, 1234567.89, 20000, 12.34])('ida e volta: lerNumero(dinheiroParaCampo(%s)) devolve o mesmo número', (valor) => {
+    expect(lerNumero(dinheiroParaCampo(valor))).toEqual({ valor })
+  })
+})
+
+describe('casasDecimais', () => {
+  it.each([
+    [12, 0],
+    [12.5, 1],
+    [95000.55, 2],
+    [0.123456, 6],
+    [0.0000001, 7],
+    [-1.5, 1],
+    [0, 0],
+  ])('%s tem %i casa(s)', (valor, esperado) => {
+    expect(casasDecimais(valor)).toBe(esperado)
+  })
+
+  it('conta pelo valor, não pelo texto digitado: 12,5000000 lido vale 12.5 e tem 1 casa', () => {
+    expect(casasDecimais(lerNumero('12,5000000').valor)).toBe(1)
+  })
+})
+

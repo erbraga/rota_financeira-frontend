@@ -84,3 +84,54 @@ describe('aplicarErrosDoServidor', () => {
     expect(MENSAGEM_ERRO_INESPERADO).not.toContain('stack')
   })
 })
+
+describe('aplicarErrosDoServidor com um mapa de campos (nomes da API diferentes dos do formulário)', () => {
+  const MAPA = { valor_veiculo: 'valorVeiculo', valor_entrada: 'valorEntrada', prazo_meses_fundo: 'prazoMesesFundo' }
+
+  it('marca o campo do FORMULÁRIO correspondente à chave da API', () => {
+    const setError = vi.fn()
+    const geral = aplicarErrosDoServidor(erro422({ valor_veiculo: ['Veículo inválido.'] }), setError, MAPA)
+    expect(setError).toHaveBeenCalledTimes(1)
+    expect(setError).toHaveBeenCalledWith('valorVeiculo', { type: 'servidor', message: 'Veículo inválido.' })
+    expect(geral).toBeNull()
+  })
+
+  it('vários campos de uma vez, cada um no seu nome do formulário', () => {
+    const setError = vi.fn()
+    aplicarErrosDoServidor(
+      erro422({ valor_entrada: ['Entrada.'], prazo_meses_fundo: ['Prazo.'] }),
+      setError,
+      MAPA,
+    )
+    expect(setError).toHaveBeenCalledWith('valorEntrada', { type: 'servidor', message: 'Entrada.' })
+    expect(setError).toHaveBeenCalledWith('prazoMesesFundo', { type: 'servidor', message: 'Prazo.' })
+  })
+
+  it('a chave já no formato do formulário NÃO conta (só a chave da API é reconhecida): vira mensagem geral', () => {
+    const setError = vi.fn()
+    const geral = aplicarErrosDoServidor(erro422({ valorVeiculo: ['x'] }), setError, MAPA)
+    expect(setError).not.toHaveBeenCalled()
+    expect(geral).toBe('Dados inválidos')
+  })
+
+  it('chave fora do mapa: os campos conhecidos são marcados e sobra a mensagem geral', () => {
+    const setError = vi.fn()
+    const geral = aplicarErrosDoServidor(erro422({ valor_veiculo: ['x'], usuario_id: ['Campo desconhecido.'] }), setError, MAPA)
+    expect(setError).toHaveBeenCalledTimes(1)
+    expect(geral).toBe('Dados inválidos')
+  })
+
+  it('chaves herdadas do Object (constructor, toString) nunca contam como campo', () => {
+    const setError = vi.fn()
+    const geral = aplicarErrosDoServidor(erro422({ constructor: ['x'], toString: ['y'] }), setError, MAPA)
+    expect(setError).not.toHaveBeenCalled()
+    expect(geral).toBe('Dados inválidos')
+  })
+
+  it('a lista continua funcionando como antes (controle de compatibilidade)', () => {
+    const setError = vi.fn()
+    aplicarErrosDoServidor(erro422({ email: ['E-mail inválido.'] }), setError, ['nome', 'email'])
+    expect(setError).toHaveBeenCalledWith('email', { type: 'servidor', message: 'E-mail inválido.' })
+  })
+})
+

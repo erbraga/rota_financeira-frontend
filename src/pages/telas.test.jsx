@@ -4,8 +4,6 @@ import { describe, expect, it } from 'vitest'
 import Amortizacao from './Amortizacao.jsx'
 import NaoEncontrada from './NaoEncontrada.jsx'
 import Resultado from './Resultado.jsx'
-import SimulacaoForm from './SimulacaoForm.jsx'
-import Simulacoes from './Simulacoes.jsx'
 
 // Renderiza a tela na rota indicada, como o roteador da aplicação faria.
 function renderizar(caminhoRota, urlAtual, Tela) {
@@ -20,9 +18,6 @@ function renderizar(caminhoRota, urlAtual, Tela) {
 
 describe('telas provisórias', () => {
   it.each([
-    ['/simulacoes', '/simulacoes', Simulacoes, 'Minhas simulações'],
-    ['/simulacoes/nova', '/simulacoes/nova', SimulacaoForm, 'Nova simulação'],
-    ['/simulacoes/:id/editar', '/simulacoes/7/editar', SimulacaoForm, 'Editar simulação #7'],
     ['/simulacoes/:id/resultado', '/simulacoes/7/resultado', Resultado, 'Resultado da simulação #7'],
     [
       '/simulacoes/:id/financiamentos/:fid',
@@ -39,11 +34,6 @@ describe('telas provisórias', () => {
   it('a amortização mostra também a simulação de origem', () => {
     renderizar('/simulacoes/:id/financiamentos/:fid', '/simulacoes/7/financiamentos/3', Amortizacao)
     expect(screen.getByText('Simulação #7')).toBeInTheDocument()
-  })
-
-  it('a nova simulação NÃO mostra "Editar" (controle do formulário de edição)', () => {
-    renderizar('/simulacoes/nova', '/simulacoes/nova', SimulacaoForm)
-    expect(screen.queryByText(/Editar simulação/)).not.toBeInTheDocument()
   })
 })
 

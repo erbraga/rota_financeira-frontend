@@ -1,8 +1,153 @@
-import { useParams } from 'react-router-dom'
-import EmConstrucao from '../components/EmConstrucao.jsx'
+import Alert from '@mui/material/Alert'
+import AlertTitle from '@mui/material/AlertTitle'
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import Skeleton from '@mui/material/Skeleton'
+import Typography from '@mui/material/Typography'
+import { useState } from 'react'
+import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
+import { ehErroApi } from '../api/erros.js'
+import { useAviso } from '../avisos/useAviso.js'
+import EstadoErro from '../components/EstadoErro.jsx'
+import FormularioSimulacao from '../components/FormularioSimulacao.jsx'
+import { useAtualizarSimulacao } from '../hooks/useAtualizarSimulacao.js'
+import { useCriarSimulacao } from '../hooks/useCriarSimulacao.js'
+import { useSimulacao } from '../hooks/useSimulacao.js'
+import { deSimulacaoParaForm, valoresIniciais } from '../schemas/simulacao.js'
+import { mensagemDeErro } from '../utils/mensagemDeErro.js'
+
+function Cabecalho({ titulo }) {
+  return (
+    <Typography variant="h4" component="h1" sx={{ mb: 3 }}>
+      {titulo}
+    </Typography>
+  )
+}
+
+// /simulacoes/nova: cria (POST) e vai para a EDIÇÃO da nova simulação (é onde as opções de financiamento entram na
+// Etapa 5). A navegação é "replace": o Voltar do navegador não volta ao formulário de criação (e não reenvia).
+function NovaSimulacao() {
+  const criar = useCriarSimulacao()
+  const navigate = useNavigate()
+  const { mostrarAviso } = useAviso()
+  // Valores iniciais fixos durante a vida da tela (o React Hook Form só os lê na montagem).
+  const [iniciais] = useState(valoresIniciais)
+
+  async function enviar(corpo) {
+    const nova = await criar.mutateAsync(corpo)
+    mostrarAviso('Simulação criada.')
+    navigate(`/simulacoes/${nova.id}/editar`, { replace: true })
+  }
+
+  return (
+    <Box component="section">
+      <Cabecalho titulo="Nova simulação" />
+      <FormularioSimulacao
+        valoresIniciais={iniciais}
+        aoEnviar={enviar}
+        rotuloEnviar="Criar simulação"
+        acoes={
+          <Button component={RouterLink} to="/simulacoes" size="large">
+            Cancelar
+          </Button>
+        }
+      />
+    </Box>
+  )
+}
+
+function SimulacaoNaoEncontrada() {
+  return (
+    <Box component="section" sx={{ py: 3 }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Simulação não encontrada
+      </Typography>
+      <Alert severity="info" sx={{ mb: 2 }}>
+        <AlertTitle>Ela pode ter sido excluída ou não existe.</AlertTitle>
+        Volte ao histórico para ver as suas simulações.
+      </Alert>
+      <Button component={RouterLink} to="/simulacoes" variant="contained">
+        Voltar ao histórico
+      </Button>
+    </Box>
+  )
+}
+
+function EsqueletoFormulario() {
+  return (
+    <Box aria-busy="true" role="status" aria-label="Carregando" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Skeleton variant="text" width={220} height={44} />
+      {Array.from({ length: 6 }, (_, indice) => (
+        <Skeleton key={indice} variant="rounded" height={56} />
+      ))}
+      <Skeleton variant="rounded" width={160} height={44} />
+    </Box>
+  )
+}
+
+// /simulacoes/:id/editar: carrega por GET (que NÃO traz as opções), mostra o formulário preenchido e salva com um
+// PUT de corpo completo. Depois de salvar CONTINUA na tela (com o aviso), com Ver resultado e Voltar ao histórico
+// sempre visíveis.
+function EditarSimulacao({ id }) {
+  const consulta = useSimulacao(id)
+  const atualizar = useAtualizarSimulacao(id)
+  const { mostrarAviso } = useAviso()
+  // Um 404 no PUT (excluída em outro lugar) mostra o mesmo estado de "não encontrada".
+  const [sumiu, setSumiu] = useState(false)
+
+  if (consulta.isPending) return <EsqueletoFormulario />
+  if (sumiu || (consulta.isError && ehErroApi(consulta.error) && consulta.error.status === 404)) {
+    return <SimulacaoNaoEncontrada />
+  }
+  if (consulta.isError) {
+    return (
+      <EstadoErro
+        titulo="Não foi possível carregar a simulação"
+        mensagem={mensagemDeErro(consulta.error)}
+        aoTentarNovamente={() => consulta.refetch()}
+      />
+    )
+  }
+
+  async function enviar(corpo) {
+    try {
+      const salva = await atualizar.mutateAsync(corpo)
+      mostrarAviso('Alterações salvas.')
+      return salva
+    } catch (erro) {
+      if (ehErroApi(erro) && erro.status === 404) {
+        setSumiu(true)
+        return undefined
+      }
+      throw erro
+    }
+  }
+
+  return (
+    <Box component="section">
+      <Cabecalho titulo="Editar simulação" />
+      <FormularioSimulacao
+        key={id}
+        valoresIniciais={deSimulacaoParaForm(consulta.data)}
+        aoEnviar={enviar}
+        rotuloEnviar="Salvar alterações"
+        acoes={
+          <>
+            <Button component={RouterLink} to={`/simulacoes/${id}/resultado`} variant="outlined" size="large">
+              Ver resultado
+            </Button>
+            <Button component={RouterLink} to="/simulacoes" size="large">
+              Voltar ao histórico
+            </Button>
+          </>
+        }
+      />
+    </Box>
+  )
+}
 
 // Serve às rotas /simulacoes/nova e /simulacoes/:id/editar.
 export default function SimulacaoForm() {
   const { id } = useParams()
-  return <EmConstrucao titulo={id ? `Editar simulação #${id}` : 'Nova simulação'} />
+  return id ? <EditarSimulacao id={id} /> : <NovaSimulacao />
 }

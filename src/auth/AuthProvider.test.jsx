@@ -25,7 +25,13 @@ function Sonda() {
 }
 
 const status = () => screen.getByTestId('status')
-const aguardarStatus = (esperado) => waitFor(() => expect(status()).toHaveTextContent(esperado))
+// Espera o status aparecer NA TELA e também na captura (que só é atualizada num efeito, depois da renderização):
+// sem isso um teste podia ler captura.auth.aviso um instante antes de o efeito rodar.
+const aguardarStatus = (esperado) =>
+  waitFor(() => {
+    expect(status()).toHaveTextContent(esperado)
+    expect(captura.auth.status).toBe(esperado)
+  })
 
 let ana
 let pedidos

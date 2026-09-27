@@ -1,11 +1,13 @@
 import { http, HttpResponse } from 'msw'
 import { lerConfig } from '../../config.js'
 import { banco, criarSimulacao, simulacaoPublica } from '../banco.js'
-import { dadosInvalidos, simulacaoNaoEncontrada } from '../erros.js'
+import { dadosInvalidos, simulacaoAusente } from '../erros.js'
 import { autenticar } from '../sessao.js'
 import { lerCorpo, lerId, regrasSimulacao, validar } from '../validacao.js'
 
 const { urlApi } = lerConfig()
+// O Location do backend é relativo ao servidor ("/api/simulacoes/7"), não uma URL absoluta.
+const caminhoApi = new URL(urlApi).pathname
 
 // Uma única busca por id E dono: simulação alheia e inexistente dão o mesmo 404.
 export function obterSimulacao(usuario, idTexto) {
@@ -45,7 +47,7 @@ export const handlersSimulacoes = [
     const simulacao = criarSimulacao(usuario.id, lida.dados)
     return HttpResponse.json(simulacaoPublica(simulacao), {
       status: 201,
-      headers: { Location: `${urlApi}/simulacoes/${simulacao.id}` },
+      headers: { Location: `${caminhoApi}/simulacoes/${simulacao.id}` },
     })
   }),
 
@@ -53,23 +55,29 @@ export const handlersSimulacoes = [
     const { usuario, resposta } = autenticar(request)
     if (resposta) return resposta
     const simulacao = obterSimulacao(usuario, params.id)
-    return simulacao ? HttpResponse.json(simulacaoPublica(simulacao)) : simulacaoNaoEncontrada()
+    return simulacao ? HttpResponse.json(simulacaoPublica(simulacao)) : simulacaoAusente(params.id)
   }),
 
   http.put(`${urlApi}/simulacoes/:id`, async ({ request, params }) => {
     const { usuario, resposta } = autenticar(request)
     if (resposta) return resposta
     const simulacao = obterSimulacao(usuario, params.id)
-    if (!simulacao) return simulacaoNaoEncontrada()
+    if (!simulacao) return simulacaoAusente(params.id)
 
     const lida = await lerSimulacao(request)
     if (lida.resposta) return lida.resposta
 
-    // Regra de estado: o veículo tem de ser maior que a entrada de cada opção já cadastrada.
-    const opcoes = banco.financiamentos.filter((f) => f.simulacao_id === simulacao.id)
-    if (opcoes.some((f) => f.valor_entrada >= lida.dados.valor_veiculo)) {
+    // Regra de estado: o veículo tem de ser maior que a entrada de cada opção já cadastrada. A mensagem real
+    // cita a primeira opção em conflito, com o nome e o valor dela.
+    const conflito = banco.financiamentos.find(
+      (f) => f.simulacao_id === simulacao.id && f.valor_entrada >= lida.dados.valor_veiculo,
+    )
+    if (conflito) {
+      const valor = conflito.valor_entrada.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
       return dadosInvalidos({
-        valor_veiculo: ['O valor do veículo deve ser maior que a entrada de cada opção de financiamento.'],
+        valor_veiculo: [
+          `O valor do veículo deve ser maior que a entrada da opção de financiamento "${conflito.nome}" (R$ ${valor}). Ajuste a opção antes.`,
+        ],
       })
     }
 
@@ -81,7 +89,7 @@ export const handlersSimulacoes = [
     const { usuario, resposta } = autenticar(request)
     if (resposta) return resposta
     const simulacao = obterSimulacao(usuario, params.id)
-    if (!simulacao) return simulacaoNaoEncontrada()
+    if (!simulacao) return simulacaoAusente(params.id)
 
     banco.financiamentos = banco.financiamentos.filter((f) => f.simulacao_id !== simulacao.id)
     banco.simulacoes = banco.simulacoes.filter((s) => s.id !== simulacao.id)

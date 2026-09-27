@@ -154,7 +154,7 @@ describe('simulações', () => {
   it('POST -> 201 com Location e o objeto, sem usuario_id', async () => {
     const r = await chamar('POST', '/simulacoes', { token: tokenAna, corpo: SIM })
     expect(r.status).toBe(201)
-    expect(r.cabecalhos.get('Location')).toBe(`${BASE}/simulacoes/${r.corpo.id}`)
+    expect(r.cabecalhos.get('Location')).toBe(`/api/simulacoes/${r.corpo.id}`)
     expect(Object.keys(r.corpo).sort()).toEqual([
       'criado_em',
       'id',
@@ -278,7 +278,7 @@ describe('financiamentos', () => {
     await chamar('POST', url(), { token: tokenAna, corpo: { ...FIN, nome: 'Segunda' } })
     expect(a.status).toBe(201)
     expect(a.corpo.sistema_amortizacao).toBe('SAC')
-    expect(a.cabecalhos.get('Location')).toBe(`${BASE}${url(`/${a.corpo.id}`)}`)
+    expect(a.cabecalhos.get('Location')).toBe(`/api${url(`/${a.corpo.id}`)}`)
     expect(Object.keys(a.corpo).sort()).toEqual([
       'id',
       'nome',
@@ -487,5 +487,171 @@ describe('autenticação: mensagens e regras iguais às do backend real', () => 
       const r = await chamar('GET', '/auth/perfil', { cabecalhos: { Authorization: `Bearer ${tokenAna}` } })
       expect(r.status).toBe(200)
     })
+  })
+})
+
+// Mensagens de simulação conferidas contra o backend REAL em 2026-09-26 (sonda com conta descartável).
+// Os literais abaixo são a referência independente: se os mocks derivarem, estes testes falham.
+describe('simulações: mensagens e tipos iguais aos do backend real', () => {
+  const MSG_NOME = 'O nome deve ter entre 1 e 120 caracteres.'
+  const MSG_VEICULO = 'O valor do veículo deve estar entre 0,01 e 9.999.999,00.'
+  const MSG_ENTRADA = 'O valor da entrada deve estar entre 0,00 e 9.999.999,00.'
+  const MSG_IPCA = 'A taxa de IPCA projetada deve estar entre -20 e 100.'
+  const MSG_FUNDO = 'A taxa de rendimento do fundo deve estar entre 0 e 100.'
+  const MSG_PRAZO = 'O prazo do fundo (em meses) deve estar entre 1 e 60.'
+
+  const criarInvalida = (alteracao) => chamar('POST', '/simulacoes', { token: tokenAna, corpo: { ...SIM, ...alteracao } })
+
+  it('corpo vazio: "Campo obrigatório." nos cinco campos obrigatórios (a entrada é opcional)', async () => {
+    const r = await chamar('POST', '/simulacoes', { token: tokenAna, corpo: {} })
+    expect(r.status).toBe(422)
+    expect(r.corpo.detalhes).toEqual({
+      nome: ['Campo obrigatório.'],
+      valor_veiculo: ['Campo obrigatório.'],
+      taxa_ipca_projetada: ['Campo obrigatório.'],
+      taxa_fundo_rendimento: ['Campo obrigatório.'],
+      prazo_meses_fundo: ['Campo obrigatório.'],
+    })
+  })
+
+  it.each([
+    ['nome vazio', { nome: '' }, 'nome', MSG_NOME],
+    ['nome só com espaços', { nome: '   ' }, 'nome', MSG_NOME],
+    ['nome com 121 caracteres', { nome: 'n'.repeat(121) }, 'nome', MSG_NOME],
+    ['nome que não é texto', { nome: 123 }, 'nome', 'Nome inválido.'],
+    ['veículo 0', { valor_veiculo: 0 }, 'valor_veiculo', MSG_VEICULO],
+    ['veículo -1', { valor_veiculo: -1 }, 'valor_veiculo', MSG_VEICULO],
+    ['veículo 10.000.000', { valor_veiculo: 10000000 }, 'valor_veiculo', MSG_VEICULO],
+    ['veículo em notação científica enorme', { valor_veiculo: '1e999999' }, 'valor_veiculo', MSG_VEICULO],
+    ['veículo com 3 casas', { valor_veiculo: 95000.123 }, 'valor_veiculo', 'Use no máximo 2 casas decimais.'],
+    ['veículo texto', { valor_veiculo: 'abc' }, 'valor_veiculo', 'Número inválido.'],
+    ['veículo booleano', { valor_veiculo: true }, 'valor_veiculo', 'Número inválido.'],
+    ['veículo null', { valor_veiculo: null }, 'valor_veiculo', 'Campo obrigatório.'],
+    ['entrada -1', { valor_entrada: -1 }, 'valor_entrada', MSG_ENTRADA],
+    ['entrada maior que o veículo', { valor_entrada: 95000.01 }, 'valor_entrada', 'A entrada não pode ser maior que o valor do veículo.'],
+    ['entrada com 3 casas', { valor_entrada: 20000.001 }, 'valor_entrada', 'Use no máximo 2 casas decimais.'],
+    ['entrada null (recusada; omitir vale 0)', { valor_entrada: null }, 'valor_entrada', 'Campo obrigatório.'],
+    ['IPCA -20,5', { taxa_ipca_projetada: -20.5 }, 'taxa_ipca_projetada', MSG_IPCA],
+    ['IPCA 100,1', { taxa_ipca_projetada: 100.1 }, 'taxa_ipca_projetada', MSG_IPCA],
+    ['IPCA com 7 casas', { taxa_ipca_projetada: 12.1234567 }, 'taxa_ipca_projetada', 'Use no máximo 6 casas decimais.'],
+    ['fundo -0,1', { taxa_fundo_rendimento: -0.1 }, 'taxa_fundo_rendimento', MSG_FUNDO],
+    ['fundo 100,1', { taxa_fundo_rendimento: 100.1 }, 'taxa_fundo_rendimento', MSG_FUNDO],
+    ['prazo 0', { prazo_meses_fundo: 0 }, 'prazo_meses_fundo', MSG_PRAZO],
+    ['prazo 61', { prazo_meses_fundo: 61 }, 'prazo_meses_fundo', MSG_PRAZO],
+    ['prazo fracionado 12,5', { prazo_meses_fundo: 12.5 }, 'prazo_meses_fundo', 'Número inteiro inválido.'],
+    ['prazo texto "abc"', { prazo_meses_fundo: 'abc' }, 'prazo_meses_fundo', 'Número inteiro inválido.'],
+    ['prazo em TEXTO numérico "12" (só vale número JSON)', { prazo_meses_fundo: '12' }, 'prazo_meses_fundo', 'Número inteiro inválido.'],
+    ['campo desconhecido', { usuario_id: 7 }, 'usuario_id', 'Campo desconhecido.'],
+  ])('422 para %s', async (_rotulo, alteracao, campo, mensagem) => {
+    const r = await criarInvalida(alteracao)
+    expect(r.status).toBe(422)
+    expect(r.corpo.erro).toBe('Dados inválidos')
+    expect(r.corpo.detalhes[campo]).toEqual([mensagem])
+  })
+
+  it('os valores-limite VÁLIDOS são aceitos (controle das recusas)', async () => {
+    const minimos = { valor_veiculo: 0.01, valor_entrada: 0, taxa_ipca_projetada: -20, taxa_fundo_rendimento: 0, prazo_meses_fundo: 1 }
+    const maximos = { valor_veiculo: 9999999, valor_entrada: 9999999, taxa_ipca_projetada: 100, taxa_fundo_rendimento: 100, prazo_meses_fundo: 60 }
+    const seisCasas = { taxa_ipca_projetada: 12.123456, taxa_fundo_rendimento: 0.000001 }
+    const veiculoIgualEntrada = { valor_veiculo: 50000, valor_entrada: 50000 }
+    for (const alteracao of [minimos, maximos, seisCasas, veiculoIgualEntrada]) {
+      expect((await criarInvalida(alteracao)).status).toBe(201)
+    }
+  })
+
+  it('texto numérico vale para dinheiro e taxas, mas não para o prazo', async () => {
+    const r = await criarInvalida({ valor_veiculo: '95000.50', valor_entrada: '0', taxa_ipca_projetada: '4.5', taxa_fundo_rendimento: '12' })
+    expect(r.status).toBe(201)
+    expect(r.corpo.valor_veiculo).toBe(95000.5)
+  })
+
+  it('entrada omitida vale 0', async () => {
+    const { valor_entrada: _omitida, ...semEntrada } = SIM
+    const r = await chamar('POST', '/simulacoes', { token: tokenAna, corpo: semEntrada })
+    expect(r.status).toBe(201)
+    expect(r.corpo.valor_entrada).toBe(0)
+  })
+
+  it('o PUT parcial também dá "Campo obrigatório." (substitui tudo)', async () => {
+    const s = criarSimulacao(ana.id)
+    const r = await chamar('PUT', `/simulacoes/${s.id}`, { token: tokenAna, corpo: { nome: 'Novo' } })
+    expect(r.status).toBe(422)
+    expect(Object.keys(r.corpo.detalhes).sort()).toEqual(['prazo_meses_fundo', 'taxa_fundo_rendimento', 'taxa_ipca_projetada', 'valor_veiculo'])
+  })
+})
+
+// Comportamentos conferidos contra o backend REAL em 2026-09-26.
+describe('simulações: 404, Location e PUT contra a entrada de uma opção (backend real)', () => {
+  it('id NÃO numérico ("abc", "-1"): 404 genérico "Recurso não encontrado", em qualquer método e rota aninhada', async () => {
+    for (const id of ['abc', '-1']) {
+      for (const [metodo, sufixo, corpo] of [
+        ['GET', ''],
+        ['PUT', '', SIM],
+        ['DELETE', ''],
+        ['GET', '/financiamentos'],
+        ['GET', '/resultado'],
+      ]) {
+        const r = await chamar(metodo, `/simulacoes/${id}${sufixo}`, { token: tokenAna, corpo })
+        expect(r.status, `${metodo} ${id}${sufixo}`).toBe(404)
+        expect(r.corpo).toEqual({ erro: 'Recurso não encontrado' })
+      }
+    }
+  })
+
+  it('id numérico que não existe, "0" e acima do INTEGER: 404 "Simulação não encontrada" (controle dos não numéricos)', async () => {
+    for (const id of ['999999', '0', '99999999999']) {
+      const r = await chamar('GET', `/simulacoes/${id}`, { token: tokenAna })
+      expect(r.status).toBe(404)
+      expect(r.corpo).toEqual({ erro: 'Simulação não encontrada' })
+    }
+  })
+
+  it('opção: id não numérico dá "Recurso não encontrado" e numérico inexistente, "Opção de financiamento não encontrada"', async () => {
+    const s = criarSimulacao(ana.id)
+    const naoNumerico = await chamar('PUT', `/simulacoes/${s.id}/financiamentos/abc`, { token: tokenAna, corpo: FIN })
+    const inexistente = await chamar('PUT', `/simulacoes/${s.id}/financiamentos/999`, { token: tokenAna, corpo: FIN })
+    expect(naoNumerico.corpo).toEqual({ erro: 'Recurso não encontrado' })
+    expect(inexistente.corpo).toEqual({ erro: 'Opção de financiamento não encontrada' })
+  })
+
+  it('o Location do POST é RELATIVO ("/api/simulacoes/7"), não uma URL absoluta', async () => {
+    const r = await chamar('POST', '/simulacoes', { token: tokenAna, corpo: SIM })
+    const location = r.cabecalhos.get('Location')
+    expect(location).toBe(`/api/simulacoes/${r.corpo.id}`)
+    expect(location).not.toMatch(/^https?:/)
+  })
+
+  it('PUT com veículo <= entrada de uma opção: a mensagem real cita o NOME e o VALOR da opção', async () => {
+    const s = criarSimulacao(ana.id, { valor_veiculo: 95000 })
+    criarFinanciamento(s.id, { nome: 'Banco X', valor_entrada: 50000 })
+    const r = await chamar('PUT', `/simulacoes/${s.id}`, {
+      token: tokenAna,
+      corpo: { ...SIM, valor_veiculo: 50000, valor_entrada: 0 },
+    })
+    expect(r.status).toBe(422)
+    expect(r.corpo).toEqual({
+      erro: 'Dados inválidos',
+      detalhes: {
+        valor_veiculo: [
+          'O valor do veículo deve ser maior que a entrada da opção de financiamento "Banco X" (R$ 50.000,00). Ajuste a opção antes.',
+        ],
+      },
+    })
+    // Controle: um centavo acima da entrada da opção é aceito.
+    const aceito = await chamar('PUT', `/simulacoes/${s.id}`, {
+      token: tokenAna,
+      corpo: { ...SIM, valor_veiculo: 50000.01, valor_entrada: 0 },
+    })
+    expect(aceito.status).toBe(200)
+  })
+
+  it('com várias opções, a mensagem cita a primeira (na ordem de criação) que conflita', async () => {
+    const s = criarSimulacao(ana.id, { valor_veiculo: 95000 })
+    criarFinanciamento(s.id, { nome: 'Banco A', valor_entrada: 30000 })
+    criarFinanciamento(s.id, { nome: 'Banco B', valor_entrada: 60000 })
+    const soB = await chamar('PUT', `/simulacoes/${s.id}`, { token: tokenAna, corpo: { ...SIM, valor_veiculo: 40000, valor_entrada: 0 } })
+    expect(soB.corpo.detalhes.valor_veiculo[0]).toContain('"Banco B" (R$ 60.000,00)')
+    const ambas = await chamar('PUT', `/simulacoes/${s.id}`, { token: tokenAna, corpo: { ...SIM, valor_veiculo: 20000, valor_entrada: 0 } })
+    expect(ambas.corpo.detalhes.valor_veiculo[0]).toContain('"Banco A" (R$ 30.000,00)')
   })
 })

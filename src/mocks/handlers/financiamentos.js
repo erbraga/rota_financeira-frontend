@@ -1,13 +1,14 @@
 import { http, HttpResponse } from 'msw'
 import { lerConfig } from '../../config.js'
 import { banco, criarFinanciamento, financiamentoPublico } from '../banco.js'
-import { dadosInvalidos, financiamentoNaoEncontrado, respostaErro, simulacaoNaoEncontrada } from '../erros.js'
+import { dadosInvalidos, financiamentoAusente, respostaErro, simulacaoAusente } from '../erros.js'
 import { autenticar } from '../sessao.js'
 import { lerCorpo, lerId, regrasFinanciamento, validar } from '../validacao.js'
 import { obterSimulacao } from './simulacoes.js'
 
 const { urlApi } = lerConfig()
 const MAXIMO_OPCOES = 3
+const caminhoApi = new URL(urlApi).pathname
 
 const opcoesDe = (simulacao) => banco.financiamentos.filter((f) => f.simulacao_id === simulacao.id)
 
@@ -31,7 +32,7 @@ export const handlersFinanciamentos = [
     const { usuario, resposta } = autenticar(request)
     if (resposta) return resposta
     const simulacao = obterSimulacao(usuario, params.id)
-    if (!simulacao) return simulacaoNaoEncontrada()
+    if (!simulacao) return simulacaoAusente(params.id)
     const itens = opcoesDe(simulacao).map(financiamentoPublico)
     return HttpResponse.json({ itens, total: itens.length })
   }),
@@ -41,7 +42,7 @@ export const handlersFinanciamentos = [
     const { usuario, resposta } = autenticar(request)
     if (resposta) return resposta
     const simulacao = obterSimulacao(usuario, params.id)
-    if (!simulacao) return simulacaoNaoEncontrada()
+    if (!simulacao) return simulacaoAusente(params.id)
 
     const lida = await lerFinanciamento(request, simulacao)
     if (lida.resposta) return lida.resposta
@@ -52,7 +53,7 @@ export const handlersFinanciamentos = [
     const financiamento = criarFinanciamento(simulacao.id, lida.dados)
     return HttpResponse.json(financiamentoPublico(financiamento), {
       status: 201,
-      headers: { Location: `${urlApi}/simulacoes/${simulacao.id}/financiamentos/${financiamento.id}` },
+      headers: { Location: `${caminhoApi}/simulacoes/${simulacao.id}/financiamentos/${financiamento.id}` },
     })
   }),
 
@@ -60,10 +61,10 @@ export const handlersFinanciamentos = [
     const { usuario, resposta } = autenticar(request)
     if (resposta) return resposta
     const simulacao = obterSimulacao(usuario, params.id)
-    if (!simulacao) return simulacaoNaoEncontrada()
+    if (!simulacao) return simulacaoAusente(params.id)
     const fid = lerId(params.fid)
     const financiamento = opcoesDe(simulacao).find((f) => f.id === fid)
-    if (!financiamento) return financiamentoNaoEncontrado()
+    if (!financiamento) return financiamentoAusente(params.fid)
 
     const lida = await lerFinanciamento(request, simulacao)
     if (lida.resposta) return lida.resposta
@@ -76,10 +77,10 @@ export const handlersFinanciamentos = [
     const { usuario, resposta } = autenticar(request)
     if (resposta) return resposta
     const simulacao = obterSimulacao(usuario, params.id)
-    if (!simulacao) return simulacaoNaoEncontrada()
+    if (!simulacao) return simulacaoAusente(params.id)
     const fid = lerId(params.fid)
     const financiamento = opcoesDe(simulacao).find((f) => f.id === fid)
-    if (!financiamento) return financiamentoNaoEncontrado()
+    if (!financiamento) return financiamentoAusente(params.fid)
 
     banco.financiamentos = banco.financiamentos.filter((f) => f.id !== financiamento.id)
     return new HttpResponse(null, { status: 204 })

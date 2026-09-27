@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 import App from './App.jsx'
-import { criarUsuario, tokenDe } from './mocks/banco.js'
+import { criarSimulacao, criarUsuario, tokenDe } from './mocks/banco.js'
 import { handlers } from './mocks/handlers/index.js'
 import { servidor } from './mocks/servidor.js'
 import { renderizarComAuth } from './testUtils.jsx'
@@ -10,7 +10,10 @@ let token
 
 beforeEach(() => {
   servidor.use(...handlers)
-  token = tokenDe(criarUsuario({ nome: 'Ana Souza', email: 'ana@example.com' }))
+  const ana = criarUsuario({ nome: 'Ana Souza', email: 'ana@example.com' })
+  token = tokenDe(ana)
+  // Simulação 1 da Ana: as telas de edição carregam por id (sem ela seriam "não encontrada").
+  criarSimulacao(ana.id, { nome: 'Onix' })
 })
 
 const h1 = (nome) => screen.findByRole('heading', { level: 1, name: nome })
@@ -19,7 +22,7 @@ describe('rotas privadas (com sessão)', () => {
   it.each([
     ['/simulacoes', 'Minhas simulações'],
     ['/simulacoes/nova', 'Nova simulação'],
-    ['/simulacoes/1/editar', 'Editar simulação #1'],
+    ['/simulacoes/1/editar', 'Editar simulação'],
     ['/simulacoes/1/resultado', 'Resultado da simulação #1'],
     ['/simulacoes/1/financiamentos/2', 'Amortização da opção #2'],
   ])('%s mostra "%s", dentro do layout com o nome do usuário e o Sair', async (rota, titulo) => {
@@ -27,16 +30,21 @@ describe('rotas privadas (com sessão)', () => {
     expect(await h1(titulo)).toBeInTheDocument()
     expect(screen.getByText('Ana Souza')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sair' })).toBeInTheDocument()
+    // A tela real do histórico busca a lista: espera terminar para nada resolver depois do teste.
+    if (rota === '/simulacoes') await screen.findByRole('heading', { level: 2, name: 'Onix' })
+    if (rota === '/simulacoes/1/editar') await screen.findByLabelText('Nome da simulação')
   })
 
   it('/ redireciona para as simulações', async () => {
     renderizarComAuth(<App />, { rota: '/', token })
     expect(await h1('Minhas simulações')).toBeInTheDocument()
+    await screen.findByRole('heading', { level: 2, name: 'Onix' })
   })
 
   it.each(['/login', '/registrar'])('%s redireciona quem já está logado para as simulações', async (rota) => {
     renderizarComAuth(<App />, { rota, token })
     expect(await h1('Minhas simulações')).toBeInTheDocument()
+    await screen.findByRole('heading', { level: 2, name: 'Onix' })
   })
 })
 

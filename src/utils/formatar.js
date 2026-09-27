@@ -91,3 +91,18 @@ export function numeroParaCampo(valor) {
   if (/e/i.test(texto)) texto = numero.toFixed(20).replace(/0+$/, '').replace(/\.$/, '')
   return texto.replace('.', ',')
 }
+
+const formatoDinheiroDeCampo = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+// Texto de um campo de DINHEIRO (sem "R$"): 95000.5 -> "95.000,50". Sempre 2 casas, com o ponto de milhar que o
+// lerNumero aceita, então lerNumero(dinheiroParaCampo(n)) devolve n.
+export function dinheiroParaCampo(valor) {
+  const numero = numeroValido(valor)
+  return numero === null ? '' : formatoDinheiroDeCampo.format(numero)
+}
+
+// Casas decimais de um número, contadas como o backend: pelo VALOR (12,5000000 tem 1 casa; 0,0000001 tem 7).
+export function casasDecimais(valor) {
+  const texto = numeroParaCampo(valor)
+  return texto.includes(',') ? texto.split(',')[1].length : 0
+}

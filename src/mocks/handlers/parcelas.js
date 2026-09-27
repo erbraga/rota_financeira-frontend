@@ -2,7 +2,7 @@
 import { http, HttpResponse } from 'msw'
 import { lerConfig } from '../../config.js'
 import { banco } from '../banco.js'
-import { financiamentoNaoEncontrado, simulacaoNaoEncontrada } from '../erros.js'
+import { financiamentoAusente, simulacaoAusente } from '../erros.js'
 import parcelasPrice from '../fixtures/parcelas-price.json'
 import parcelasSac from '../fixtures/parcelas-sac.json'
 import { autenticar } from '../sessao.js'
@@ -17,11 +17,11 @@ export const handlersParcelas = [
     const { usuario, resposta } = autenticar(request)
     if (resposta) return resposta
     const simulacao = obterSimulacao(usuario, params.id)
-    if (!simulacao) return simulacaoNaoEncontrada()
+    if (!simulacao) return simulacaoAusente(params.id)
 
     const fid = lerId(params.fid)
     const financiamento = banco.financiamentos.find((f) => f.id === fid && f.simulacao_id === simulacao.id)
-    if (!financiamento) return financiamentoNaoEncontrado()
+    if (!financiamento) return financiamentoAusente(params.fid)
 
     return HttpResponse.json(financiamento.sistema_amortizacao === 'SAC' ? parcelasSac : parcelasPrice)
   }),
