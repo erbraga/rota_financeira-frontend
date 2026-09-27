@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { banco, criarFinanciamento, criarSimulacao, criarUsuario, tokenDe } from '../mocks/banco.js'
 import { respostaErro } from '../mocks/erros.js'
 import { handlers } from '../mocks/handlers/index.js'
+import { indiceDesatualizado, indiceIndisponivel, INDICES, indiceSemSugestao } from '../mocks/handlers/indices.js'
 import { servidor } from '../mocks/servidor.js'
 import { criarQueryClient } from '../queryClient.js'
 import { renderizarComAuth } from '../testUtils.jsx'
@@ -54,6 +55,7 @@ let ana
 let bia
 let token
 let pedidos
+let consultas
 
 beforeEach(() => {
   servidor.use(...handlers)
@@ -61,20 +63,36 @@ beforeEach(() => {
   bia = criarUsuario({ nome: 'Bia', email: 'bia@example.com' })
   token = tokenDe(ana)
   pedidos = []
-  servidor.events.on('request:start', ({ request }) => pedidos.push(`${request.method} ${new URL(request.url).pathname.replace('/api', '')}`))
+  consultas = []
+  servidor.events.on('request:start', ({ request }) => {
+    pedidos.push(`${request.method} ${new URL(request.url).pathname.replace('/api', '')}`)
+    consultas.push(request.url)
+  })
 })
 
 afterEach(() => servidor.events.removeAllListeners())
 
 const abrir = (rota) => renderizarComAuth(<Rotas />, { rota, token })
 
+// A nova simulação já vem com as taxas sugeridas: os testes esperam as duas chegarem antes de digitar (a corrida com a
+// resposta tem testes próprios) e limpam os campos para digitar os seus valores.
+const usarCdi = () => screen.findByRole('button', { name: /Usar a sugestão do CDI/ })
+const usarIpca = () => screen.findByRole('button', { name: /Usar a sugestão do IPCA/ })
+async function esperarSugestoes() {
+  await usarCdi()
+  await usarIpca()
+}
+
 async function preencherValidos() {
+  await esperarSugestoes()
   await userEvent.type(campo(R.nome), 'Onix 2026')
   await userEvent.type(campo(R.veiculo), '95000,5')
   await userEvent.clear(campo(R.entrada))
   await userEvent.type(campo(R.entrada), '20000')
+  await userEvent.clear(campo(R.fundo))
   await userEvent.type(campo(R.fundo), '12')
   await userEvent.type(campo(R.prazo), '36')
+  await userEvent.clear(campo(R.ipca))
   await userEvent.type(campo(R.ipca), '4,5')
 }
 
@@ -125,8 +143,9 @@ describe('SimulacaoForm: nova simulação', () => {
 
   it('validação no cliente: não chama a API e não navega', async () => {
     abrir('/simulacoes/nova')
+    await esperarSugestoes() // as duas taxas já vêm preenchidas: faltam só nome, veículo e prazo
     await userEvent.click(screen.getByRole('button', { name: 'Criar simulação' }))
-    expect(await screen.findAllByText('Campo obrigatório.')).toHaveLength(5)
+    expect(await screen.findAllByText('Campo obrigatório.')).toHaveLength(3)
     expect(pedidos.filter((p) => p === 'POST /simulacoes')).toEqual([])
     expect(caminho()).toBe('/simulacoes/nova')
   })
@@ -166,11 +185,14 @@ describe('SimulacaoForm: nova simulação', () => {
 
   it('a entrada vazia cria a simulação com entrada 0', async () => {
     abrir('/simulacoes/nova')
+    await esperarSugestoes()
     await userEvent.type(campo(R.nome), 'Sem entrada')
     await userEvent.type(campo(R.veiculo), '80000')
     await userEvent.clear(campo(R.entrada))
+    await userEvent.clear(campo(R.fundo))
     await userEvent.type(campo(R.fundo), '10')
     await userEvent.type(campo(R.prazo), '24')
+    await userEvent.clear(campo(R.ipca))
     await userEvent.type(campo(R.ipca), '4')
     await userEvent.click(screen.getByRole('button', { name: 'Criar simulação' }))
     await waitFor(() => expect(banco.simulacoes).toHaveLength(1))
@@ -325,5 +347,235 @@ describe('SimulacaoForm: não encontrada e erros ao carregar', () => {
     abrir(`/simulacoes/${s.id}/editar`)
     expect(await screen.findByText('Não foi possível carregar a simulação')).toBeInTheDocument()
     expect(screen.getByRole('alert')).toHaveTextContent('Não foi possível falar com o servidor.')
+  })
+})
+
+// ---- Taxas sugeridas do Banco Central (Etapa 4) -----------------------------------------------------------------
+const chamadasAosIndices = () => consultas.filter((url) => /\/indices\//.test(url))
+const botaoCriar = () => screen.getByRole('button', { name: 'Criar simulação' })
+
+// O CDI só responde quando o teste manda (sem depender de tempo, que varia com a carga da máquina).
+function segurarCdi() {
+  let liberar
+  const comporta = new Promise((resolver) => {
+    liberar = resolver
+  })
+  servidor.use(
+    http.get(`${BASE}/indices/cdi`, async () => {
+      await comporta
+      return HttpResponse.json(INDICES.cdi)
+    }),
+  )
+  return liberar
+}
+
+async function preencherSemTaxas() {
+  await userEvent.type(campo(R.nome), 'Onix 2026')
+  await userEvent.type(campo(R.veiculo), '95000,5')
+  await userEvent.clear(campo(R.entrada))
+  await userEvent.type(campo(R.entrada), '20000')
+  await userEvent.type(campo(R.prazo), '36')
+}
+
+describe('SimulacaoForm: taxas sugeridas na simulação nova', () => {
+  it('já vem com o CDI e o IPCA sugeridos, com a origem, a data e o texto de que o IPCA é o realizado', async () => {
+    abrir('/simulacoes/nova')
+    await esperarSugestoes()
+    expect(campo(R.fundo)).toHaveValue('13,65')
+    expect(campo(R.ipca)).toHaveValue('4,22')
+    expect(screen.getByText(/CDI de 24\/09\/2026/)).toBeInTheDocument()
+    expect(screen.getByText(/IPCA acumulado em 12 meses até ago\/2026/)).toBeInTheDocument()
+    expect(screen.getByText(/já realizado.*não uma projeção/)).toBeInTheDocument()
+    expect(campo(R.fundo)).toHaveAccessibleDescription(/De 0 a 100.*Sugestão do Banco Central: 13,65% a\.a\./)
+  })
+
+  it('busca CDI e IPCA em paralelo, com periodo=1m (só a sugestão interessa)', async () => {
+    abrir('/simulacoes/nova')
+    await esperarSugestoes()
+    const urls = chamadasAosIndices().map((url) => new URL(url))
+    expect(urls.map((u) => u.pathname).sort()).toEqual(['/api/indices/cdi', '/api/indices/ipca'])
+    for (const u of urls) expect(u.searchParams.getAll('periodo')).toEqual(['1m'])
+  })
+
+  it('criar com as taxas sugeridas: o POST leva números e a edição mostra o que foi salvo', async () => {
+    let corpo
+    servidor.events.on('request:start', ({ request }) => {
+      if (request.method === 'POST') request.clone().json().then((lido) => { corpo = lido })
+    })
+    abrir('/simulacoes/nova')
+    await esperarSugestoes()
+    await preencherSemTaxas()
+    await userEvent.click(botaoCriar())
+    await waitFor(() => expect(caminho()).toMatch(/\/editar$/))
+
+    // O corpo do POST leva as taxas como NÚMERO (13,65 na tela -> 13.65 na API).
+    expect(corpo.taxa_fundo_rendimento).toBe(13.65)
+    expect(corpo.taxa_ipca_projetada).toBe(4.22)
+    expect(banco.simulacoes[0]).toMatchObject({ taxa_fundo_rendimento: 13.65, taxa_ipca_projetada: 4.22 })
+    expect(await screen.findByRole('heading', { level: 1, name: 'Editar simulação' })).toBeInTheDocument()
+    expect(campo(R.fundo)).toHaveValue('13,65')
+    expect(campo(R.ipca)).toHaveValue('4,22')
+  })
+
+  it('digitar ANTES de a resposta chegar: o valor digitado é mantido e a sugestão fica só com o botão', async () => {
+    const liberarCdi = segurarCdi()
+    abrir('/simulacoes/nova')
+    await userEvent.type(campo(R.fundo), '12')
+    expect(screen.getByText('Buscando a sugestão do Banco Central…')).toBeInTheDocument()
+
+    liberarCdi()
+    const botao = await usarCdi() // a resposta chegou
+    expect(campo(R.fundo)).toHaveValue('12')
+    expect(campo(R.ipca)).toHaveValue('4,22') // controle: o campo que ninguém tocou foi preenchido
+
+    await userEvent.click(botao)
+    expect(campo(R.fundo)).toHaveValue('13,65')
+  })
+
+  it('resposta que chega DEPOIS de enviar não quebra nem sobrescreve o que foi salvo', async () => {
+    const liberarCdi = segurarCdi()
+    abrir('/simulacoes/nova')
+    await usarIpca()
+    await preencherSemTaxas()
+    await userEvent.type(campo(R.fundo), '12')
+    await userEvent.click(botaoCriar())
+    await waitFor(() => expect(caminho()).toMatch(/\/editar$/))
+    expect(banco.simulacoes[0].taxa_fundo_rendimento).toBe(12)
+
+    liberarCdi()
+    await usarCdi() // a resposta tardia chega já na tela de edição
+    expect(campo(R.fundo)).toHaveValue('12')
+    expect(banco.simulacoes[0].taxa_fundo_rendimento).toBe(12)
+  })
+
+  it('a segunda abertura do formulário usa o cache (cache de produção): não refaz as chamadas aos índices', async () => {
+    const cliente = criarQueryClient({ retry: false, gcTime: Infinity })
+    const primeira = renderizarComAuth(<Rotas />, { rota: '/simulacoes/nova', token, queryClient: cliente })
+    await esperarSugestoes()
+    expect(chamadasAosIndices()).toHaveLength(2)
+    primeira.unmount()
+
+    renderizarComAuth(<Rotas />, { rota: '/simulacoes/nova', token, queryClient: cliente })
+    await esperarSugestoes()
+    expect(campo(R.fundo)).toHaveValue('13,65')
+    expect(chamadasAosIndices()).toHaveLength(2)
+  })
+
+  it('controle: sem o cache (cache limpo) a segunda abertura refaz as duas chamadas', async () => {
+    const cliente = criarQueryClient({ retry: false, gcTime: Infinity })
+    const primeira = renderizarComAuth(<Rotas />, { rota: '/simulacoes/nova', token, queryClient: cliente })
+    await esperarSugestoes()
+    primeira.unmount()
+    cliente.removeQueries({ queryKey: ['indices'] })
+
+    renderizarComAuth(<Rotas />, { rota: '/simulacoes/nova', token, queryClient: cliente })
+    await esperarSugestoes()
+    expect(chamadasAosIndices()).toHaveLength(4)
+  })
+})
+
+describe('SimulacaoForm: sugestão indisponível não impede criar a simulação', () => {
+  it('503 (Banco Central fora do ar e sem cache): avisos com Tentar de novo, digitar as taxas e criar', async () => {
+    servidor.use(indiceIndisponivel())
+    abrir('/simulacoes/nova')
+    expect(await screen.findAllByText('Não foi possível obter a sugestão do Banco Central agora. Digite a taxa.')).toHaveLength(2)
+    expect(screen.getAllByRole('button', { name: 'Tentar de novo' })).toHaveLength(2)
+    expect(campo(R.fundo)).toHaveValue('')
+    expect(campo(R.ipca)).toHaveValue('')
+
+    await preencherSemTaxas()
+    await userEvent.type(campo(R.fundo), '12')
+    await userEvent.type(campo(R.ipca), '4,5')
+    await userEvent.click(botaoCriar())
+    await waitFor(() => expect(caminho()).toMatch(/\/editar$/))
+    expect(banco.simulacoes[0]).toMatchObject({ taxa_fundo_rendimento: 12, taxa_ipca_projetada: 4.5 })
+  })
+
+  it('Banco Central e API sem resposta (rede): o mesmo aviso, e o formulário segue digitável', async () => {
+    servidor.use(http.get(`${BASE}/indices/:indice`, () => HttpResponse.error()))
+    abrir('/simulacoes/nova')
+    expect(await screen.findAllByText(/Não foi possível obter a sugestão do Banco Central agora/)).toHaveLength(2)
+    await userEvent.type(campo(R.fundo), '12')
+    expect(campo(R.fundo)).toHaveValue('12')
+  })
+
+  it('Tentar de novo refaz só aquela consulta e, ao chegar, preenche o campo que continua vazio', async () => {
+    servidor.use(indiceIndisponivel())
+    abrir('/simulacoes/nova')
+    await screen.findAllByText(/Não foi possível obter a sugestão/)
+    servidor.resetHandlers(...handlers)
+    const antes = chamadasAosIndices().length
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'Tentar de novo' })[0])
+    await usarCdi()
+    expect(campo(R.fundo)).toHaveValue('13,65')
+    expect(campo(R.ipca)).toHaveValue('') // o IPCA não foi refeito
+    expect(screen.getAllByRole('button', { name: 'Tentar de novo' })).toHaveLength(1)
+    expect(chamadasAosIndices().length).toBe(antes + 1)
+  })
+
+  it('sugestao null: sem preencher e sem botão; as taxas digitadas criam a simulação', async () => {
+    servidor.use(indiceSemSugestao())
+    abrir('/simulacoes/nova')
+    expect(await screen.findAllByText('Sem sugestão do Banco Central disponível agora. Digite a taxa.')).toHaveLength(2)
+    expect(screen.queryByRole('button', { name: /Usar a sugestão/ })).not.toBeInTheDocument()
+    await preencherSemTaxas()
+    await userEvent.type(campo(R.fundo), '12')
+    await userEvent.type(campo(R.ipca), '4,5')
+    await userEvent.click(botaoCriar())
+    await waitFor(() => expect(banco.simulacoes).toHaveLength(1))
+    expect(banco.simulacoes[0]).toMatchObject({ taxa_fundo_rendimento: 12, taxa_ipca_projetada: 4.5 })
+  })
+
+  it('desatualizado: pré-preenche, avisa que veio do cache e cria normalmente', async () => {
+    servidor.use(indiceDesatualizado())
+    abrir('/simulacoes/nova')
+    await esperarSugestoes()
+    expect(screen.getAllByText('Dados do cache, podem estar defasados.')).toHaveLength(2)
+    expect(campo(R.fundo)).toHaveValue('13,65')
+    await preencherSemTaxas()
+    await userEvent.click(botaoCriar())
+    await waitFor(() => expect(banco.simulacoes).toHaveLength(1))
+    expect(banco.simulacoes[0].taxa_fundo_rendimento).toBe(13.65)
+  })
+})
+
+describe('SimulacaoForm: na edição a sugestão é só informação', () => {
+  const salva = () =>
+    criarSimulacao(ana.id, { nome: 'Onix', valor_veiculo: 95000, valor_entrada: 20000, taxa_ipca_projetada: 5, taxa_fundo_rendimento: 11, prazo_meses_fundo: 36 })
+
+  it('os valores gravados ficam intactos quando a sugestão chega; só o clique em Usar muda o campo', async () => {
+    const s = salva()
+    abrir(`/simulacoes/${s.id}/editar`)
+    await screen.findByRole('heading', { level: 1, name: 'Editar simulação' })
+    const botao = await usarCdi()
+    await usarIpca()
+    expect(campo(R.fundo)).toHaveValue('11')
+    expect(campo(R.ipca)).toHaveValue('5')
+    expect(screen.getByText(/CDI de 24\/09\/2026/)).toBeInTheDocument()
+
+    await userEvent.click(botao)
+    expect(campo(R.fundo)).toHaveValue('13,65')
+    expect(campo(R.ipca)).toHaveValue('5')
+  })
+
+  it('depois de salvar continuam os valores salvos (a sugestão não volta a preencher)', async () => {
+    const s = salva()
+    abrir(`/simulacoes/${s.id}/editar`)
+    await esperarSugestoes()
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }))
+    await screen.findByText('Alterações salvas.')
+    expect(campo(R.fundo)).toHaveValue('11')
+    expect(campo(R.ipca)).toHaveValue('5')
+    expect(banco.simulacoes[0]).toMatchObject({ taxa_fundo_rendimento: 11, taxa_ipca_projetada: 5 })
+  })
+
+  it('503 dos índices na edição: o formulário funciona e salva', async () => {
+    servidor.use(indiceIndisponivel())
+    const s = salva()
+    abrir(`/simulacoes/${s.id}/editar`)
+    expect(await screen.findAllByText(/Não foi possível obter a sugestão do Banco Central agora/)).toHaveLength(2)
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }))
+    expect(await screen.findByText('Alterações salvas.')).toBeInTheDocument()
   })
 })

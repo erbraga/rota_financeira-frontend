@@ -12,9 +12,18 @@ import EstadoErro from '../components/EstadoErro.jsx'
 import FormularioSimulacao from '../components/FormularioSimulacao.jsx'
 import { useAtualizarSimulacao } from '../hooks/useAtualizarSimulacao.js'
 import { useCriarSimulacao } from '../hooks/useCriarSimulacao.js'
+import { useIndice } from '../hooks/useIndice.js'
 import { useSimulacao } from '../hooks/useSimulacao.js'
 import { deSimulacaoParaForm, valoresIniciais } from '../schemas/simulacao.js'
 import { mensagemDeErro } from '../utils/mensagemDeErro.js'
+
+// CDI e IPCA em paralelo, sem bloquear a tela: o formulário abre e é digitável desde o primeiro instante, e a criação
+// nunca depende do Banco Central. Devolve o formato que o FormularioSimulacao espera.
+function useSugestoes() {
+  const cdi = useIndice('cdi')
+  const ipca = useIndice('ipca')
+  return { taxaFundoRendimento: cdi, taxaIpcaProjetada: ipca }
+}
 
 function Cabecalho({ titulo }) {
   return (
@@ -32,6 +41,7 @@ function NovaSimulacao() {
   const { mostrarAviso } = useAviso()
   // Valores iniciais fixos durante a vida da tela (o React Hook Form só os lê na montagem).
   const [iniciais] = useState(valoresIniciais)
+  const sugestoes = useSugestoes()
 
   async function enviar(corpo) {
     const nova = await criar.mutateAsync(corpo)
@@ -46,6 +56,8 @@ function NovaSimulacao() {
         valoresIniciais={iniciais}
         aoEnviar={enviar}
         rotuloEnviar="Criar simulação"
+        sugestoes={sugestoes}
+        preencherSugestoes
         acoes={
           <Button component={RouterLink} to="/simulacoes" size="large">
             Cancelar
@@ -91,6 +103,8 @@ function EsqueletoFormulario() {
 function EditarSimulacao({ id }) {
   const consulta = useSimulacao(id)
   const atualizar = useAtualizarSimulacao(id)
+  // Na edição a sugestão é só informação (e o botão "Usar"): os valores gravados nunca mudam sozinhos.
+  const sugestoes = useSugestoes()
   const { mostrarAviso } = useAviso()
   // Um 404 no PUT (excluída em outro lugar) mostra o mesmo estado de "não encontrada".
   const [sumiu, setSumiu] = useState(false)
@@ -131,6 +145,7 @@ function EditarSimulacao({ id }) {
         valoresIniciais={deSimulacaoParaForm(consulta.data)}
         aoEnviar={enviar}
         rotuloEnviar="Salvar alterações"
+        sugestoes={sugestoes}
         acoes={
           <>
             <Button component={RouterLink} to={`/simulacoes/${id}/resultado`} variant="outlined" size="large">

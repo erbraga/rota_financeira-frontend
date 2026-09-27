@@ -56,6 +56,18 @@ export function formatarData(texto) {
   }).format(data)
 }
 
+// Meses abreviados escritos aqui (e não pelo Intl, cuja abreviação varia: "ago." com ponto em algumas versões).
+const MESES_ABREVIADOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+
+// "2026-08-01" -> "ago/2026" (o IPCA é mensal). Mesma leitura de formatarData: só dia = data local; com hora e fuso,
+// o fuso do navegador.
+export function formatarMesAno(texto) {
+  if (formatarData(texto) === SEM_VALOR) return SEM_VALOR
+  const soDia = SO_DIA.exec(texto)
+  const data = soDia ? new Date(Number(soDia[1]), Number(soDia[2]) - 1, Number(soDia[3])) : new Date(texto)
+  return `${MESES_ABREVIADOS[data.getMonth()]}/${data.getFullYear()}`
+}
+
 export const MENSAGEM_NUMERO_INVALIDO =
   'Use vírgula para decimais (ex.: 12,5) e ponto só para milhares (ex.: 1.234,56).'
 

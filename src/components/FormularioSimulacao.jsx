@@ -4,14 +4,19 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { CAMPOS_DA_API, deSimulacaoParaForm, esquemaSimulacao, paraCorpoDaApi } from '../schemas/simulacao.js'
 import { aplicarErrosDoServidor } from '../utils/errosDeFormulario.js'
+import { numeroParaCampo } from '../utils/formatar.js'
 import CampoNumerico from './CampoNumerico.jsx'
+import SugestaoDeTaxa from './SugestaoDeTaxa.jsx'
 
 // Ordem visual dos campos: o foco vai para o primeiro campo com erro vindo do servidor.
 const ORDEM_DOS_CAMPOS = ['nome', 'valorVeiculo', 'valorEntrada', 'taxaFundoRendimento', 'prazoMesesFundo', 'taxaIpcaProjetada']
+
+// Cada campo de taxa e o índice do Banco Central que o sugere.
+const INDICE_DO_CAMPO = { taxaFundoRendimento: 'cdi', taxaIpcaProjetada: 'ipca' }
 
 function Secao({ titulo, children }) {
   return (
@@ -28,8 +33,20 @@ function Secao({ titulo, children }) {
 //  - valoresIniciais: valores do formulário (texto), de valoresIniciais() ou deSimulacaoParaForm();
 //  - aoEnviar(corpo): envia (corpo já em snake_case, com números) e pode devolver a simulação salva, cujos valores
 //    passam a ser mostrados reformatados; lança o ErroApi/ErroRede para o formulário mostrar;
-//  - rotuloEnviar: texto do botão; acoes: botões extras ao lado do de enviar.
-export default function FormularioSimulacao({ valoresIniciais, aoEnviar, rotuloEnviar = 'Salvar', acoes }) {
+//  - rotuloEnviar: texto do botão; acoes: botões extras ao lado do de enviar;
+//  - sugestoes: { taxaFundoRendimento, taxaIpcaProjetada }, cada uma o resultado do useIndice (CDI e IPCA). Sem isso o
+//    formulário funciona igual, sem linha de sugestão;
+//  - preencherSugestoes: só na simulação NOVA. A sugestão chega e preenche o campo UMA vez, e só se ele ainda estiver
+//    intocado (sem edição nem saída do campo): o que a pessoa digitou nunca é sobrescrito. Na edição os valores gravados
+//    nunca mudam sozinhos; só o botão "Usar" altera o campo.
+export default function FormularioSimulacao({
+  valoresIniciais,
+  aoEnviar,
+  rotuloEnviar = 'Salvar',
+  acoes,
+  sugestoes,
+  preencherSugestoes = false,
+}) {
   const [erroGeral, setErroGeral] = useState(null)
 
   const {
@@ -38,14 +55,55 @@ export default function FormularioSimulacao({ valoresIniciais, aoEnviar, rotuloE
     handleSubmit,
     setError,
     setFocus,
+    setValue,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, dirtyFields, touchedFields },
   } = useForm({
     resolver: zodResolver(esquemaSimulacao),
     defaultValues: valoresIniciais,
     // O erro de um campo aparece ao sair dele ou ao enviar (e depois de enviar, revalida a cada mudança).
     mode: 'onBlur',
   })
+
+  // Campos cuja sugestão já foi decidida (preenchida ou deixada de lado): a decisão vale uma vez só.
+  const decididos = useRef(new Set())
+  useEffect(() => {
+    if (!preencherSugestoes || !sugestoes) return
+    for (const nome of Object.keys(INDICE_DO_CAMPO)) {
+      const sugestao = sugestoes[nome]?.data?.sugestao
+      if (!sugestao || decididos.current.has(nome)) continue
+      decididos.current.add(nome)
+      // Sem shouldDirty: o valor sugerido não conta como digitado (a pessoa ainda pode substituí-lo).
+      if (!dirtyFields[nome] && !touchedFields[nome]) setValue(nome, numeroParaCampo(sugestao.valor))
+    }
+  }, [preencherSugestoes, sugestoes, dirtyFields, touchedFields, setValue])
+
+  // "Usar": escreve a sugestão (também sobre o que foi digitado, é o "restaurar"), valida e devolve o foco ao campo.
+  function usarSugestao(nome, texto) {
+    setValue(nome, texto, { shouldDirty: true, shouldValidate: true })
+    setFocus(nome)
+  }
+
+  // Linha de apoio sob o campo de taxa (só quando o formulário recebeu as consultas).
+  function apoio(nome) {
+    const consulta = sugestoes?.[nome]
+    if (!consulta) return {}
+    const id = `sugestao-${nome}`
+    return {
+      descritoPor: id,
+      sugestao: (
+        <SugestaoDeTaxa
+          id={id}
+          indice={INDICE_DO_CAMPO[nome]}
+          consulta={consulta}
+          aoUsar={(texto) => usarSugestao(nome, texto)}
+          aoTentarNovamente={() => consulta.refetch()}
+        />
+      ),
+    }
+  }
+  const rendimento = apoio('taxaFundoRendimento')
+  const ipca = apoio('taxaIpcaProjetada')
 
   async function aoSubmeter(valores) {
     setErroGeral(null)
@@ -102,7 +160,9 @@ export default function FormularioSimulacao({ valoresIniciais, aoEnviar, rotuloE
           formato="taxa"
           label="Rendimento do fundo (% a.a.)"
           helperText="De 0 a 100. Por exemplo, o CDI"
+          descritoPor={rendimento.descritoPor}
         />
+        {rendimento.sugestao}
         <CampoNumerico
           control={control}
           name="prazoMesesFundo"
@@ -119,7 +179,9 @@ export default function FormularioSimulacao({ valoresIniciais, aoEnviar, rotuloE
           formato="taxa"
           label="IPCA projetado (% a.a.)"
           helperText="De -20 a 100. Quanto o preço do carro deve subir por ano"
+          descritoPor={ipca.descritoPor}
         />
+        {ipca.sugestao}
       </Secao>
 
       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>

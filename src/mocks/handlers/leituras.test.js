@@ -178,15 +178,45 @@ describe('GET /indices/:indice', () => {
     expect((await chamar('GET', `/indices/cdi?periodo=${periodo}`, { token: tokenAna })).status).toBe(200)
   })
 
-  it.each([['2m'], ['12M'], [''], ['abc'], ['12m&periodo=6m']])('período "%s" -> 422', async (periodo) => {
+  // Mensagens literais, copiadas do backend real (2026-09-26): a referência não é o handler.
+  const MENSAGEM_PERIODO = 'O período deve ser um destes: 1m, 3m, 6m, 12m, 24m, 60m.'
+
+  it.each([['2m'], ['12M'], [''], ['abc']])('período "%s" -> 422 com a mensagem real', async (periodo) => {
     const r = await chamar('GET', `/indices/cdi?periodo=${periodo}`, { token: tokenAna })
     expect(r.status).toBe(422)
-    expect(r.corpo.detalhes.periodo).toBeDefined()
+    expect(r.corpo).toEqual({ erro: 'Dados inválidos', detalhes: { periodo: [MENSAGEM_PERIODO] } })
+  })
+
+  it('período repetido -> 422 "Informe o parâmetro uma única vez."', async () => {
+    const r = await chamar('GET', '/indices/cdi?periodo=12m&periodo=6m', { token: tokenAna })
+    expect(r.status).toBe(422)
+    expect(r.corpo).toEqual({
+      erro: 'Dados inválidos',
+      detalhes: { periodo: ['Informe o parâmetro uma única vez.'] },
+    })
+  })
+
+  it('parâmetro desconhecido -> 422 "Campo desconhecido." (chave = o nome do parâmetro)', async () => {
+    const r = await chamar('GET', '/indices/cdi?foo=1', { token: tokenAna })
+    expect(r.status).toBe(422)
+    expect(r.corpo).toEqual({ erro: 'Dados inválidos', detalhes: { foo: ['Campo desconhecido.'] } })
+  })
+
+  it('parâmetro desconhecido junto com período válido: só o desconhecido é recusado (controle)', async () => {
+    const r = await chamar('GET', '/indices/cdi?periodo=1m&foo=1', { token: tokenAna })
+    expect(r.status).toBe(422)
+    expect(r.corpo.detalhes).toEqual({ foo: ['Campo desconhecido.'] })
+  })
+
+  it('sem parâmetros e com só periodo=1m continuam 200 (controle)', async () => {
+    expect((await chamar('GET', '/indices/cdi', { token: tokenAna })).status).toBe(200)
+    expect((await chamar('GET', '/indices/ipca?periodo=1m', { token: tokenAna })).status).toBe(200)
   })
 
   it('ordem: o 404 do índice vem antes do 422 do período', async () => {
-    const r = await chamar('GET', '/indices/selic?periodo=xx', { token: tokenAna })
+    const r = await chamar('GET', '/indices/selic?periodo=xx&foo=1', { token: tokenAna })
     expect(r.status).toBe(404)
+    expect(r.corpo).toEqual({ erro: 'Índice não encontrado' })
   })
 
   describe('atalhos de teste', () => {

@@ -1,5 +1,5 @@
-// Índices (CDI e IPCA): devolve as fixtures reais do backend, sem consultar nada. O "periodo" é validado,
-// mas não filtra os pontos da fixture.
+// Índices (CDI e IPCA): devolve as fixtures reais do backend, sem consultar nada. O "periodo" é validado
+// (e qualquer outro parâmetro é recusado, como no backend real), mas não filtra os pontos da fixture.
 import { http, HttpResponse } from 'msw'
 import { lerConfig } from '../../config.js'
 import { dadosInvalidos, respostaErro } from '../erros.js'
@@ -22,10 +22,18 @@ export const handlersIndices = [
     const indice = INDICES[params.indice]
     if (!indice) return respostaErro(404, 'Índice não encontrado')
 
-    const valores = new URL(request.url).searchParams.getAll('periodo')
-    if (valores.length > 1 || (valores.length === 1 && !PERIODOS.includes(valores[0]))) {
-      return dadosInvalidos({ periodo: [`O período deve ser um destes: ${PERIODOS.join(', ')}.`] })
+    // Como no backend real: um erro por parâmetro (chave = o nome do parâmetro), todos de uma vez.
+    const consulta = new URL(request.url).searchParams
+    const detalhes = {}
+    for (const nome of new Set(consulta.keys())) {
+      const valores = consulta.getAll(nome)
+      if (nome !== 'periodo') detalhes[nome] = ['Campo desconhecido.']
+      else if (valores.length > 1) detalhes[nome] = ['Informe o parâmetro uma única vez.']
+      else if (!PERIODOS.includes(valores[0])) {
+        detalhes[nome] = [`O período deve ser um destes: ${PERIODOS.join(', ')}.`]
+      }
     }
+    if (Object.keys(detalhes).length > 0) return dadosInvalidos(detalhes)
     return HttpResponse.json(indice)
   }),
 ]

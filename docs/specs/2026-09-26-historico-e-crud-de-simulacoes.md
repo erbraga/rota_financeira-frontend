@@ -169,7 +169,7 @@ Sem decisões em aberto: a spec está pronta para o `/plan`.
 
 ## Plano de Implementação
 
-**Status:** executado em 2026-09-26 (T1 a T18; T19 e T20 são do commit e da confirmação) · **Criado em:** 2026-09-26
+**Status:** executado em 2026-09-26 (T1 a T20) · **Criado em:** 2026-09-26
 
 São 20 tarefas pequenas, em sete blocos. Cada uma indica **quem executa** (**Claude** ou **Você**), os arquivos, o que muda e como
 validar. O código de cada módulo nasce **junto com os seus testes** (`*.test.js(x)` ao lado). Regras para todo o plano:
@@ -342,4 +342,5 @@ T5, T6, T8, T10 e T13; a T12 usa T5, T6, T8 e T10 a T11. As tarefas que exigem *
 - **Verificação automática com o backend real (T16):** 27 casos gerados pelo **código real** do cliente (`esquemaSimulacao` e `paraCorpoDaApi`), enviados ao backend real com uma conta descartável: a mensagem do cliente é idêntica à do backend em todos os casos recusados, e os aceitos deram `201`; `Location` relativo, os dois `404`, a mensagem do `PUT` contra a opção e a entrada vazia → 0 confirmados. A conta terminou com 0 simulações.
 - **Verificação no navegador (T17, pelo autor):** os 9 itens passaram.
 - **Resíduos:** a conta `sonda-...` da exploração ficou com 1 simulação (descuido); a da T16 foi limpa. O backend não exclui usuários.
+- **Publicação (T19 e T20):** commit `c4a3165`. O GitHub tem os 134 arquivos rastreados (os mesmos do disco), com `src/avisos/`, `src/hooks/`, `src/schemas/` e `src/api/simulacoes.js`. **Verificação do zero:** clone do repositório público numa pasta limpa, com `npm ci`, `npm ls`, `lint` (0 avisos), `test` (830 em 39 arquivos) e `build` verdes; `dist/` sem `.env`, `mockServiceWorker.js` nem dados de teste.
 

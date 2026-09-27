@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   formatarData,
+  formatarMesAno,
   formatarMoeda,
   casasDecimais,
   dinheiroParaCampo,
@@ -109,6 +110,52 @@ describe('formatarData', () => {
       expect(formatarData(valor)).toBe(SEM_VALOR)
     },
   )
+})
+
+describe('formatarMesAno', () => {
+  it.each([
+    ['2026-01-01', 'jan/2026'],
+    ['2026-02-01', 'fev/2026'],
+    ['2026-03-01', 'mar/2026'],
+    ['2026-04-01', 'abr/2026'],
+    ['2026-05-01', 'mai/2026'],
+    ['2026-06-01', 'jun/2026'],
+    ['2026-07-01', 'jul/2026'],
+    ['2026-08-01', 'ago/2026'],
+    ['2026-09-01', 'set/2026'],
+    ['2026-10-01', 'out/2026'],
+    ['2026-11-01', 'nov/2026'],
+    ['2026-12-01', 'dez/2026'],
+  ])('%s -> %s', (data, esperado) => {
+    expect(formatarMesAno(data)).toBe(esperado)
+  })
+
+  it('controle: um new Date("2026-08-01") ingênuo mostraria julho neste fuso', () => {
+    expect(new Date('2026-08-01').getMonth()).toBe(6)
+  })
+
+  it.each(['UTC', 'America/Sao_Paulo', 'America/Los_Angeles', 'Pacific/Kiritimati', 'Asia/Tokyo'])(
+    'não volta um mês em nenhum fuso (%s)',
+    (fuso) => {
+      const original = process.env.TZ
+      process.env.TZ = fuso
+      try {
+        expect(formatarMesAno('2026-08-01')).toBe('ago/2026')
+        expect(formatarMesAno('2026-01-01')).toBe('jan/2026')
+      } finally {
+        process.env.TZ = original
+      }
+    },
+  )
+
+  it('data com hora e fuso usa o fuso do navegador', () => {
+    // 01:00 UTC de 1º de setembro ainda são 22:00 de 31 de agosto em São Paulo.
+    expect(formatarMesAno('2026-09-01T01:00:00+00:00')).toBe('ago/2026')
+  })
+
+  it.each([null, undefined, '', 'abc', '2026-13-01', '2026-02-30', 20260801])('%s -> traço', (valor) => {
+    expect(formatarMesAno(valor)).toBe(SEM_VALOR)
+  })
 })
 
 describe('lerNumero (pontuação pt-BR estrita)', () => {

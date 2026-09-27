@@ -1,4 +1,5 @@
 import TextField from '@mui/material/TextField'
+import { useId } from 'react'
 import { useController } from 'react-hook-form'
 import { casasDecimais, dinheiroParaCampo, lerNumero, numeroParaCampo } from '../utils/formatar.js'
 
@@ -15,8 +16,10 @@ const FORMATOS = {
 // número tiver mais casas do que cabem, fica como digitado e o esquema mostra o erro. Inválido ou vazio também fica.
 // depende: nomes de OUTROS campos que devem ser revalidados quando este muda (ex.: a entrada depende do veículo). Sem
 // isso o React Hook Form só revalida o campo que perdeu o foco, e o erro cruzado só apareceria no envio.
-export default function CampoNumerico({ control, name, formato = 'dinheiro', depende, helperText, ...resto }) {
+// descritoPor: id de um texto de apoio que fica FORA do campo (ex.: a sugestão do Banco Central); é lido junto com a ajuda.
+export default function CampoNumerico({ control, name, formato = 'dinheiro', depende, helperText, descritoPor, ...resto }) {
   const { field, fieldState } = useController({ control, name, rules: depende ? { deps: depende } : undefined })
+  const id = useId()
   const { casas, inputMode, escrever } = FORMATOS[formato]
 
   // ORDEM IMPORTA: primeiro reescreve o valor (onChange), depois sai do campo (onBlur). O onBlur é quem dispara a
@@ -40,6 +43,7 @@ export default function CampoNumerico({ control, name, formato = 'dinheiro', dep
   return (
     <TextField
       {...resto}
+      id={id}
       name={field.name}
       value={field.value ?? ''}
       onChange={field.onChange}
@@ -48,7 +52,13 @@ export default function CampoNumerico({ control, name, formato = 'dinheiro', dep
       autoComplete="off"
       error={Boolean(fieldState.error)}
       helperText={fieldState.error?.message ?? helperText}
-      slotProps={{ htmlInput: { inputMode } }}
+      slotProps={{
+        htmlInput: {
+          inputMode,
+          // O MUI liga o campo à ajuda (`${id}-helper-text`); como este atributo a substitui, ela é repetida aqui.
+          ...(descritoPor && { 'aria-describedby': `${id}-helper-text ${descritoPor}` }),
+        },
+      }}
     />
   )
 }
