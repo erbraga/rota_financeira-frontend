@@ -53,6 +53,20 @@ describe('aplicarErrosDoServidor', () => {
     expect(setError).toHaveBeenCalledWith('email', { type: 'servidor', message: 'Texto solto.' })
   })
 
+  it('lista VAZIA para um campo conhecido: não marca o campo (nada para mostrar) e sobra a mensagem geral', () => {
+    const setError = vi.fn()
+    const geral = aplicarErrosDoServidor(erro422({ email: [] }), setError, CAMPOS)
+    expect(setError).not.toHaveBeenCalled()
+    expect(geral).toBe('Dados inválidos')
+  })
+
+  it('valor que não é lista nem texto (ex.: número, formato inesperado do backend): não marca o campo, vira mensagem geral', () => {
+    const setError = vi.fn()
+    const geral = aplicarErrosDoServidor(erro422({ email: 123 }), setError, CAMPOS)
+    expect(setError).not.toHaveBeenCalled()
+    expect(geral).toBe('Dados inválidos')
+  })
+
   it('erro da API sem detalhes (409, 401): devolve o "erro" do backend e não marca campo', () => {
     const setError = vi.fn()
     const conflito = new ErroApi({ status: 409, erro: 'E-mail já cadastrado' })

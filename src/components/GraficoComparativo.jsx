@@ -6,19 +6,7 @@ import { useId, useMemo, useState } from 'react'
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { formatarMoeda, formatarMoedaCompacta } from '../utils/formatar.js'
 import { CHAVE_FUNDO, CHAVE_PRECO, montarDados, montarLinhas, resumoDoGrafico } from '../utils/serieDoGrafico.js'
-
-// Só o leitor de tela lê: o resumo em texto do que o gráfico desenha.
-const SO_PARA_LEITOR_DE_TELA = {
-  position: 'absolute',
-  width: 1,
-  height: 1,
-  m: -1,
-  p: 0,
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-  border: 0,
-}
+import { SO_PARA_LEITOR_DE_TELA } from '../estilos.js'
 
 // Cor E traço de cada linha: as cores sozinhas não bastam (daltonismo, impressão em preto e branco).
 function estiloDaLinha(linha, indiceDoFinanciamento, paleta) {
@@ -96,7 +84,7 @@ export default function GraficoComparativo({ series, financiamentos }) {
         })}
       </Box>
 
-      <Box component="figure" aria-labelledby={idDoTitulo} aria-describedby={idDoResumo} sx={{ m: 0 }}>
+      <Box component="figure" aria-labelledby={idDoTitulo} aria-describedby={idDoResumo} sx={{ m: 0, position: 'relative' }}>
         <Typography id={idDoResumo} component="p" sx={SO_PARA_LEITOR_DE_TELA}>
           {`Gráfico de linhas, do mês ${dados[0].mes} ao mês ${dados.at(-1).mes}, em reais. ${resumo.join(' ')}`}
         </Typography>

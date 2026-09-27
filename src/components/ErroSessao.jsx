@@ -2,10 +2,12 @@ import Alert from '@mui/material/Alert'
 import AlertTitle from '@mui/material/AlertTitle'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
+import { useTituloDaPagina } from '../hooks/useTituloDaPagina.js'
 
 // Mostrada quando não foi possível validar a sessão por falha de rede ou erro do servidor (não por 401):
 // o token é mantido, e a pessoa pode tentar de novo ou sair.
 export default function ErroSessao({ aoTentarNovamente, aoSair }) {
+  useTituloDaPagina('Não foi possível verificar sua sessão')
   return (
     <Box sx={{ py: 4 }}>
       <Alert severity="error" sx={{ mb: 2 }}>

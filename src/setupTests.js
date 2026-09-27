@@ -11,6 +11,11 @@ beforeEach(() => {
   vi.spyOn(console, 'error').mockImplementation((...args) => {
     throw new Error(`console.error inesperado: ${args.map(String).join(' ')}`)
   })
+  // O jsdom não implementa scrollTo (logaria "Not implemented", que a trava acima faria virar erro de teste); é o
+  // MudancaDeRota (Etapa 8, montado em App.jsx) quem chama, a cada troca de rota — inclusive redirecionamentos
+  // (RotaProtegida, SoVisitantes, o índice para /simulacoes), em qualquer teste que renderize <App />. Alguns
+  // arquivos (client HTTP, handlers) rodam no ambiente node (docblock), sem window: nada a fazer neles.
+  if (typeof window !== 'undefined') vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
 })
 
 afterEach(() => {

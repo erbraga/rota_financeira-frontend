@@ -1,6 +1,7 @@
 // Erros do client HTTP. A SPA distingue dois casos:
 //  - ErroApi: o servidor respondeu com erro (4xx/5xx), no formato { erro, detalhes } do backend;
 //  - ErroRede: não houve resposta (servidor fora do ar, CORS bloqueado, DNS) ou estourou o timeout.
+import { MENSAGEM_REDE, MENSAGEM_TIMEOUT } from '../utils/textosDeErro.js'
 
 export class ErroApi extends Error {
   // status: código HTTP; erro: mensagem do backend; detalhes: { campo: [mensagens] } ou undefined.
@@ -15,11 +16,7 @@ export class ErroApi extends Error {
 
 export class ErroRede extends Error {
   constructor({ porTimeout = false, causa } = {}) {
-    super(
-      porTimeout
-        ? 'O servidor demorou demais para responder.'
-        : 'Não foi possível falar com o servidor.',
-    )
+    super(porTimeout ? MENSAGEM_TIMEOUT : MENSAGEM_REDE)
     this.name = 'ErroRede'
     this.porTimeout = porTimeout
     this.causa = causa

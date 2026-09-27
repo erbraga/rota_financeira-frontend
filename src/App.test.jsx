@@ -1,6 +1,10 @@
 import { screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { lazy, Suspense, useState } from 'react'
+import { Route, Routes } from 'react-router-dom'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App.jsx'
+import CarregandoTela from './components/CarregandoTela.jsx'
+import Layout from './components/Layout.jsx'
 import { criarFinanciamento, criarSimulacao, criarUsuario, tokenDe } from './mocks/banco.js'
 import { handlers } from './mocks/handlers/index.js'
 import { servidor } from './mocks/servidor.js'
@@ -84,5 +88,56 @@ describe('rotas públicas', () => {
     renderizarComAuth(<App />, { rota: '/qualquer-coisa', token })
     expect(await h1('Página não encontrada')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Sair' })).not.toBeInTheDocument()
+  })
+})
+
+// ---- O padrão das rotas sob demanda (React.lazy + Suspense, Etapa 8), usado por Resultado e Amortização --------
+// Em vez de mockar o módulo real da página (o que exigiria vi.resetModules, e resetaria também o contexto do
+// AuthProvider que o testUtils já tinha carregado, quebrando os outros testes do arquivo), usa um componente
+// FALSO por trás de um React.lazy controlado por uma comporta: exercita o mesmo Layout > ErrorBoundary >
+// Suspense > lazy que o App.jsx real usa nas duas rotas, com controle total sobre quando o "pacote" chega.
+function RotaSobDemanda({ carregar }) {
+  const [TelaFalsa] = useState(() => lazy(carregar))
+  return (
+    <Routes>
+      <Route element={<Layout />}>
+        <Route
+          path="/teste-lazy"
+          element={
+            <Suspense fallback={<CarregandoTela />}>
+              <TelaFalsa />
+            </Suspense>
+          }
+        />
+      </Route>
+    </Routes>
+  )
+}
+
+describe('App: o padrão das rotas sob demanda (React.lazy + Suspense), usado por Resultado e Amortização', () => {
+  it('mostra o esqueleto (CarregandoTela) enquanto o pacote não chegou, e depois a tela (comporta)', async () => {
+    let liberar
+    const comporta = new Promise((resolver) => {
+      liberar = resolver
+    })
+    const carregar = () => comporta.then(() => ({ default: () => <h1>Tela carregada</h1> }))
+    renderizarComAuth(<RotaSobDemanda carregar={carregar} />, { rota: '/teste-lazy', token })
+    expect(await screen.findByRole('status', { name: 'Carregando a tela' })).toBeInTheDocument()
+
+    liberar()
+    expect(await h1('Tela carregada')).toBeInTheDocument()
+    expect(screen.queryByRole('status', { name: 'Carregando a tela' })).not.toBeInTheDocument()
+  })
+
+  it('se o pacote falhar em carregar, a fronteira por tela do Layout mostra o erro com Tentar de novo (nunca tela em branco)', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const carregar = () => Promise.reject(new Error('Failed to fetch dynamically imported module: /assets/x.js'))
+    renderizarComAuth(<RotaSobDemanda carregar={carregar} />, { rota: '/teste-lazy', token })
+
+    expect(await h1('Algo deu errado nesta tela')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Tentar de novo' })).toBeInTheDocument()
+    // A barra do Layout (fora da fronteira por tela) continua funcionando.
+    expect(screen.getByText('Ana Souza')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sair' })).toBeInTheDocument()
   })
 })

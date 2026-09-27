@@ -19,5 +19,6 @@ describe('NaoEncontrada', () => {
     renderizar('*', '/qualquer-coisa', NaoEncontrada)
     expect(screen.getByRole('heading', { level: 1, name: 'Página não encontrada' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Ir para minhas simulações' })).toHaveAttribute('href', '/simulacoes')
+    expect(document.title).toBe('Página não encontrada · Rota Financeira')
   })
 })

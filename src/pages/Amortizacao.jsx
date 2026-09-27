@@ -8,9 +8,10 @@ import EsqueletoLista from '../components/EsqueletoLista.jsx'
 import EstadoErro from '../components/EstadoErro.jsx'
 import GraficoAmortizacao from '../components/GraficoAmortizacao.jsx'
 import ResumoFinanciamento from '../components/ResumoFinanciamento.jsx'
-import SimulacaoNaoEncontrada from '../components/SimulacaoNaoEncontrada.jsx'
+import SimulacaoNaoEncontrada, { TITULO_SIMULACAO_NAO_ENCONTRADA } from '../components/SimulacaoNaoEncontrada.jsx'
 import TabelaAmortizacao from '../components/TabelaAmortizacao.jsx'
 import { useParcelas } from '../hooks/useParcelas.js'
+import { useTituloDaPagina } from '../hooks/useTituloDaPagina.js'
 import { mensagemDeErro } from '../utils/mensagemDeErro.js'
 
 function EsqueletoAmortizacao() {
@@ -33,9 +34,19 @@ export default function Amortizacao() {
   const { id, fid } = useParams()
   const consulta = useParcelas(id, fid)
 
-  if (consulta.isPending) return <EsqueletoAmortizacao />
   // Simulação inexistente ou alheia E opção inexistente ou de outra simulação: o mesmo estado (não vaza existência de nada).
-  if (consulta.isError && ehErroApi(consulta.error) && consulta.error.status === 404) return <SimulacaoNaoEncontrada />
+  const naoEncontrada = consulta.isError && ehErroApi(consulta.error) && consulta.error.status === 404
+  // Enquanto carrega (ou num erro sem nome ainda conhecido) o título fica sem o nome da opção, nunca "undefined".
+  useTituloDaPagina(
+    naoEncontrada
+      ? TITULO_SIMULACAO_NAO_ENCONTRADA
+      : consulta.data
+        ? `Amortização: ${consulta.data.financiamento.nome}`
+        : 'Amortização',
+  )
+
+  if (consulta.isPending) return <EsqueletoAmortizacao />
+  if (naoEncontrada) return <SimulacaoNaoEncontrada />
   if (consulta.isError) {
     return (
       <EstadoErro

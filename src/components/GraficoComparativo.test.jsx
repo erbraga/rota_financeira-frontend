@@ -158,6 +158,16 @@ describe('GraficoComparativo: alternativa em texto e acessibilidade', () => {
     expect(descricao).not.toContain('Banco Exemplo')
   })
 
+  it('o parágrafo de resumo mede 1px (não estica a página): o sx do MUI lê width/height entre 0 e 1 como porcentagem', () => {
+    mostrar(tresOpcoes)
+    const figura = screen.getByRole('figure', { name: 'Evolução mês a mês' })
+    const descricao = document.getElementById(figura.getAttribute('aria-describedby'))
+    const estilo = getComputedStyle(descricao)
+    expect(estilo.width).toBe('1px')
+    expect(estilo.height).toBe('1px')
+    expect(getComputedStyle(figura).position).toBe('relative') // contém o filho absoluto
+  })
+
   it('nome de opção de 120 caracteres quebra a linha na legenda (não estoura)', () => {
     const financiamentos = [{ ...tresOpcoes.cenarios.financiamentos[0], nome: 'x'.repeat(120) }]
     const series = tresOpcoes.series.map((p) => ({ ...p, saldo_devedor: { 1: p.saldo_devedor['1'] } }))

@@ -73,9 +73,12 @@ describe('Amortizacao: carregando e sucesso', () => {
     abrir()
     expect(screen.getByRole('status', { name: 'Carregando' })).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    // Enquanto carrega, o título não tem o nome da opção (ainda desconhecido): nunca "undefined".
+    expect(document.title).toBe('Amortização · Rota Financeira')
     liberar()
     await esperarTela()
     expect(screen.queryByRole('status', { name: 'Carregando' })).not.toBeInTheDocument()
+    expect(document.title).toBe('Amortização: Banco Exemplo Price 48x · Rota Financeira')
   })
 
   it('Price: título com o nome da opção, links, resumo com os totais, gráfico e a tabela de 48 linhas', async () => {
@@ -206,6 +209,7 @@ describe('Amortizacao: os quatro 404 dão o MESMO estado, sem vazar nada', () =>
   async function textoDoCaso(simulacaoId, fid) {
     const { unmount, container } = abrir(simulacaoId, fid)
     expect(await screen.findByRole('heading', { level: 1, name: 'Simulação não encontrada' })).toBeInTheDocument()
+    expect(document.title).toBe('Simulação não encontrada · Rota Financeira')
     // O contêiner da tela (o body traz o <span> de medição que o Recharts deixa de outros testes).
     const texto = container.textContent
     expect(screen.getByRole('link', { name: 'Voltar ao histórico' })).toHaveAttribute('href', '/simulacoes')

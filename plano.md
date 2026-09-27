@@ -32,8 +32,7 @@ Convenção de status: `[ ]` pendente · `[x]` concluída.
 | 12 | Revisão final e entrega | R6 |
 
 **Dependências entre etapas:** 0 → 1 → 2 → 3 → (4, 5) → 6 → 7 → 8 → (9) → 10 → 11 → 12. As etapas 4 e 5 só
-dependem da 3 e podem trocar de ordem. O Dockerfile (10) só precisa de um build que funcione, então pode ser
-antecipado depois da 3 se sobrar tempo, mas o teste final é com o app completo.
+dependem da 3 e podem trocar de ordem. O Dockerfile (10) só precisa de um build que funcione, então pode ser antecipado depois da 3 se sobrar tempo, mas o teste final é com o app completo.
 
 **Cobertura do R1 (4 métodos HTTP diferentes)** — todos exercitados pela interface:
 
@@ -173,18 +172,20 @@ antecipado depois da 3 se sobrar tempo, mas o teste final é com o app completo.
 **Notas:** 1517 testes em 66 arquivos; nenhuma dependência nova nem ícone novo (continuam os 5); bundle 1.162 kB (+3,2 %). Decisões do autor: quadro com rolagem e cabeçalho fixo; gráfico de barras empilhadas; totais num bloco de resumo acima (sem linha de totais na tabela); só voltar ao resultado (sem seletor de opção). Nomes finais: `api/parcelas.js` em arquivo próprio e `utils/serieDaAmortizacao.js`; o `EmConstrucao` foi removido (nenhuma tela provisória resta). Achados do backend real: os totais do `/parcelas` são idênticos aos do `/resultado`, o `/parcelas` ignora parâmetros extras (o `/resultado` os recusa) e há dois casos extremos (71 parcelas de R$ 0,00 com financiado de R$ 0,01 em 72x, e quitação antecipada com financiado de R$ 0,02 em 3x).
 
 ## Etapa 8 — Tratamento de erros, responsividade e ajustes finais
-**Arquivos:** `src/components/{ErrorBoundary,Aviso,EstadoErro,Carregando}.jsx`, `src/pages/NaoEncontrada.jsx`, ajustes transversais, `src/theme.js`
+**Status: concluída em 2026-09-27** (spec: `docs/specs/2026-09-27-erros-responsividade-ajustes-finais.md`).
+**Arquivos:** `src/estilos.js`, `src/utils/textosDeErro.js`, `src/hooks/useTituloDaPagina.js`, `src/components/{MudancaDeRota,ErrorBoundary,ErroInesperado,CarregandoTela}.jsx`, `src/App.jsx`, `src/Raiz.jsx`, `src/theme.js`, ajustes em praticamente todas as páginas (título da aba) e em `index.html`
 
-- [ ] Camada única de mensagens de erro em pt-BR: rede fora do ar, timeout, 401, 404, 409, 422 (por campo), 500 genérico e 503; nunca mostrar detalhe técnico nem corpo cru do servidor.
-- [ ] `ErrorBoundary` global e página 404 da SPA.
-- [ ] Feedback visual consistente (R4): *snackbars* de sucesso/erro, esqueletos, botões com progresso, estados vazios ilustrados, avisos de índice desatualizado.
-- [ ] Revisão de **responsividade** (largura de celular, tablet e desktop) em todas as telas, incluindo formulários, cartões, gráfico e tabela.
-- [ ] Acessibilidade básica: rótulos nos campos, foco visível, contraste, `aria-label` em ícones, gráfico com descrição textual, navegação por teclado nos diálogos.
-- [ ] Revisão dos textos, formatação (reais, %) e títulos de página (`document.title`); nenhum `console.log` esquecido; sem `dangerouslySetInnerHTML`.
-- [ ] Desempenho: divisão por rota (`React.lazy`) se o bundle do gráfico pesar; sem chamadas repetidas desnecessárias (cache do React Query com `staleTime` adequado).
-- [ ] Cobertura de testes das lacunas: mapeamento de `detalhes`, mensagens de erro, `ErrorBoundary`.
+- [x] Camada única de mensagens de erro em pt-BR (`textosDeErro.js`, módulo folha): rede fora do ar, timeout, o inesperado e as mensagens genéricas por código HTTP (400 a 504), usadas por `erros.js`, `api.js` e `errosDeFormulario.js`; nunca corpo cru, URL, stack nem nome de classe.
+- [x] `ErrorBoundary` (única classe do projeto, exceção documentada) em **duas camadas**: por tela (`Layout.jsx`, em volta do `<Outlet />`, com o caminho como chave de reinício — a barra e o Sair continuam) e global (`Raiz.jsx`, tela cheia, para o que quebrar fora do layout); `ErroInesperado.jsx` tem as duas variantes, com "Tentar de novo" (ou "Recarregar a página" na global, e também na por tela quando o erro é de um pacote que falhou em carregar).
+- [x] `MudancaDeRota.jsx`: a cada troca de **caminho** (não do `?aporte_mensal=`) rola ao topo (instantâneo) e foca o `h1` da tela nova, sem roubar o foco de um campo `autoFocus` nem de um diálogo aberto (distinção por `<main>` e `[role="dialog"]`); `useTituloDaPagina.js` define `document.title` em todas as telas.
+- [x] Correção da rolagem lateral achada na auditoria: o estilo "só para leitor de tela" dos dois gráficos (`estilos.js`) passa a ter 1 px de verdade (o `sx` do MUI lia `width: 1`/`height: 1` como 100%).
+- [x] Contraste: `warning.dark` do tema escurecido (3,79:1 → 5,53:1), com teste cobrindo todos os pares de cor usados (≥ 4,5:1 texto, ≥ 3:1 gráfico).
+- [x] Desempenho: `Resultado` e `Amortizacao` carregam sob demanda (`React.lazy` + `Suspense`, `CarregandoTela.jsx`), tirando o Recharts do pacote inicial.
+- [x] Revisão de textos e verificação de código proibido (`console.log`, `debugger`, `dangerouslySetInnerHTML`, `eval`); `index.html` com `description` e `theme-color`.
+- [x] Cobertura de testes das lacunas (`errosDeFormulario.test.js`: lista vazia e valor que não é lista).
 
-**Validar:** roteiro manual de erros (backend parado, token apagado no meio da sessão, 409, 422, 503 dos índices, id inexistente na URL) em desktop e em largura de celular; `npm test`, `npm run lint` e `npm run build` verdes.
+**Validar:** `npm run lint` (0 avisos), `npm test` (1591 testes, 3 rodadas seguidas) e `npm run build` verdes; auditoria em Chrome headless (script ad hoc, `puppeteer-core` fora do repositório) confirmando zero rolagem lateral em 9 telas × 4 larguras, 9 títulos distintos, rolagem+foco corretos ao navegar (inclusive Resultado↔Amortização), aporte sem rolar/roubar foco, erro de renderização forçado mostrando a fronteira por tela (com a barra funcionando), falha de pacote mostrando "Tentar de novo", e o pacote inicial do `/login` caindo para ~153 kB (medido no `dev`; o `build` de produção mede ~768,8 kB, contra 1.162 kB antes). Roteiro manual (backend parado, token apagado, 409, 422, 503 dos índices, id inexistente, teclado, celular) verificado por você (T15 da spec): tudo funcionou.
+**Notas:** 1591 testes em 72 arquivos (eram 1517); nenhuma dependência nova nem ícone novo (continuam os 5). Bundle inicial de produção: ~768,8 kB (~244,7 kB gzip, index + o chunk pré-carregado), contra 1.162 kB (354 kB gzip) — queda de 34%; o Recharts só entra nos chunks que `Resultado`/`Amortizacao` referenciam (confirmado por grep no `dist/`). Achados da auditoria original (Chrome headless, 4 larguras, 10 telas): rolagem lateral no resultado e na amortização (o bug do `sx` `width: 1`), tela nova abrindo rolada ao navegar dentro do app, título da aba sempre igual, sem `ErrorBoundary`, contraste insuficiente do aviso de cache — todos corrigidos e reauditados. Lições de teste: MUI 9.4 não aceita mais `justifyContent`/`flexWrap` como prop direta do `Stack` (viram atributo DOM inválido; precisam ir em `sx`); `window.location.reload` é não configurável no jsdom (substituir o objeto inteiro via `vi.stubGlobal`); mockar um módulo real de página exigiria `vi.resetModules()`, que quebraria o contexto do `AuthProvider` já carregado por outros testes do mesmo arquivo — a divisão por rota foi testada com um harness (`React.lazy` controlado por uma "comporta" sobre o `Layout`/`ErrorBoundary`/`Suspense` reais) em vez de mockar `pages/Resultado.jsx`. Na auditoria em Chrome, interceptar uma resposta por *substring* do caminho intercepta também a navegação da própria SPA (mesma porta 5173): é preciso checar a origem completa (`http://localhost:5000/api/...`); e uma resposta interceptada sem cabeçalho `Access-Control-Allow-Origin` é bloqueada pelo navegador (vira erro de rede, não o erro de renderização que se queria forçar). Resíduo conhecido: durante a depuração do script de auditoria (seletores e condições de corrida), algumas contas `sonda-...@example.com` descartáveis ficaram sem simulação (falharam antes de criar uma) e a conta final usada terminou com 0 simulações, confirmado.
 
 ## Etapa 9 — Exportação por impressão (opcional)
 **Status: só se houver tempo, depois da Etapa 8.**

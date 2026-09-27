@@ -99,4 +99,14 @@ describe('GraficoAmortizacao: alternativa em texto', () => {
     expect(descricao()).toContain('do mês 1 ao mês 1')
     expect(descricao().match(/parcela de/g)).toHaveLength(1)
   })
+
+  it('o parágrafo de resumo mede 1px (não estica a página): o sx do MUI lê width/height entre 0 e 1 como porcentagem', () => {
+    mostrar(price)
+    const figura = screen.getByRole('figure', { name: 'Juros e amortização de cada parcela' })
+    const p = document.getElementById(figura.getAttribute('aria-describedby'))
+    const estilo = getComputedStyle(p)
+    expect(estilo.width).toBe('1px')
+    expect(estilo.height).toBe('1px')
+    expect(getComputedStyle(figura).position).toBe('relative') // contém o filho absoluto
+  })
 })

@@ -71,6 +71,7 @@ describe('Registro: formulário', () => {
     expect(screen.getByText('8 a 128 caracteres')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Entrar' })).toHaveAttribute('href', '/login')
     expect(campo('Nome')).toHaveFocus()
+    expect(document.title).toBe('Criar conta · Rota Financeira')
   })
 })
 

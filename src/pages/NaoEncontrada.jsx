@@ -2,9 +2,11 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
 import { Link as RouterLink } from 'react-router-dom'
+import { useTituloDaPagina } from '../hooks/useTituloDaPagina.js'
 
 // 404 da própria SPA (rota que não existe). Não confundir com o 404 "recurso não encontrado" da API.
 export default function NaoEncontrada() {
+  useTituloDaPagina('Página não encontrada')
   return (
     <Box component="section" sx={{ py: 3 }}>
       <Typography variant="h4" component="h1" gutterBottom>

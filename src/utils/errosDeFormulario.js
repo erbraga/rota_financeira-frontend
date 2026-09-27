@@ -1,7 +1,9 @@
 // Aplica um erro vindo do servidor a um formulário do React Hook Form.
 import { ehErroApi, ehErroRede } from '../api/erros.js'
+import { MENSAGEM_ERRO_INESPERADO } from './textosDeErro.js'
 
-export const MENSAGEM_ERRO_INESPERADO = 'Ocorreu um erro inesperado. Tente novamente.'
+// Reexportado por compatibilidade: quem já importava a mensagem daqui continua funcionando.
+export { MENSAGEM_ERRO_INESPERADO }
 
 // campos: a lista de campos do formulário que têm o MESMO nome na API (['email', 'senha']) ou um MAPA
 // { campo_da_api: campoDoFormulario } quando os nomes diferem ({ valor_veiculo: 'valorVeiculo' }).

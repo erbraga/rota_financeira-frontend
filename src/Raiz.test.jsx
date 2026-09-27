@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { gravarToken } from './auth/tokenStorage.js'
 import { criarUsuario, tokenDe } from './mocks/banco.js'
 import { handlers } from './mocks/handlers/index.js'
@@ -41,5 +41,33 @@ describe('Raiz', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Configuração ausente' })).toBeInTheDocument()
     expect(screen.getByRole('alert')).toHaveTextContent('VITE_API_URL')
     expect(screen.queryByText('Rota Financeira')).not.toBeInTheDocument()
+  })
+})
+
+describe('Raiz: fronteira de erro GLOBAL (Etapa 8)', () => {
+  // Um erro FORA do Layout (aqui, num provider que fica acima do roteador) não tem a fronteira por tela
+  // (Layout.jsx) para capturá-lo: só a global (em volta de tudo, em Raiz) o pega, com a tela cheia. Mocka um
+  // módulo real (não um componente de teste) e reimporta Raiz a fresco (vi.resetModules), pois a árvore já
+  // tinha sido montada com a versão real no import estático do topo do arquivo, usado pelos outros testes.
+  afterEach(() => {
+    vi.doUnmock('./avisos/AvisosProvider.jsx')
+    vi.resetModules()
+  })
+
+  it('mostra a tela cheia "Algo deu errado" com Recarregar a página, sem tela em branco', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.resetModules()
+    vi.doMock('./avisos/AvisosProvider.jsx', () => ({
+      default: () => {
+        throw new Error('Falha forçada fora do Layout')
+      },
+    }))
+    const { default: RaizComErroForcado } = await import('./Raiz.jsx')
+
+    window.history.pushState({}, '', '/login')
+    render(<RaizComErroForcado />)
+    expect(await screen.findByRole('heading', { level: 1, name: 'Algo deu errado' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Recarregar a página' })).toBeInTheDocument()
+    expect(screen.queryByText('Entrar')).not.toBeInTheDocument()
   })
 })

@@ -3,7 +3,7 @@
 //  - erro da API: o "erro" do backend (já em português);
 //  - qualquer outro: mensagem genérica.
 import { ehErroApi, ehErroRede } from '../api/erros.js'
-import { MENSAGEM_ERRO_INESPERADO } from './errosDeFormulario.js'
+import { MENSAGEM_ERRO_INESPERADO } from './textosDeErro.js'
 
 export function mensagemDeErro(erro) {
   if (ehErroRede(erro)) return erro.message

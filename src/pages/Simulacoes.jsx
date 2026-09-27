@@ -13,11 +13,13 @@ import EstadoErro from '../components/EstadoErro.jsx'
 import EstadoVazio from '../components/EstadoVazio.jsx'
 import { useExcluirSimulacao } from '../hooks/useExcluirSimulacao.js'
 import { useSimulacoes } from '../hooks/useSimulacoes.js'
+import { useTituloDaPagina } from '../hooks/useTituloDaPagina.js'
 import { mensagemDeErro } from '../utils/mensagemDeErro.js'
 
 // Histórico: as simulações da pessoa, da mais recente à mais antiga (a ordem vem do backend; sem paginação,
 // ordenação nem filtros), com carregando, erro, vazio e a exclusão com confirmação.
 export default function Simulacoes() {
+  useTituloDaPagina('Minhas simulações')
   const consulta = useSimulacoes()
   const excluir = useExcluirSimulacao()
   const { mostrarAviso } = useAviso()

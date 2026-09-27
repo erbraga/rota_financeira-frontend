@@ -11,6 +11,7 @@ import { Link as RouterLink, useLocation } from 'react-router-dom'
 import { ehErroApi } from '../api/erros.js'
 import { useAuth } from '../auth/useAuth.js'
 import CampoSenha from '../components/CampoSenha.jsx'
+import { useTituloDaPagina } from '../hooks/useTituloDaPagina.js'
 import { esquemaLogin } from '../schemas/auth.js'
 import { aplicarErrosDoServidor } from '../utils/errosDeFormulario.js'
 
@@ -32,6 +33,7 @@ function textoDoAviso(motivoDaRota, avisoDaSessao) {
 
 // Só chama entrar(): depois do login, quem redireciona é o SoVisitantes (uma única navegação).
 export default function Login() {
+  useTituloDaPagina('Entrar')
   const { entrar, aviso, limparAviso } = useAuth()
   const { state } = useLocation()
   const emailInicial = typeof state?.email === 'string' ? state.email : ''

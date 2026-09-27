@@ -1,7 +1,7 @@
 # Tratamento de erros, responsividade e ajustes finais (Etapa 8) — Spec
 
 **Criado em:** 2026-09-27
-**Status:** Aprovada (decisões 1 a 4 resolvidas em 2026-09-27)
+**Status:** Concluída em 2026-09-27 (T1 a T16 do plano, incluindo a T15 — verificação manual no navegador, com você, "tudo funcionou"); falta só **T17** (commit e push, com você)
 **Etapa do plano:** 8 (`plano.md`) · **Requisito:** R4 (feedback visual mais elaborado) e qualidade geral de entrega
 
 ## Problema
@@ -110,19 +110,19 @@ Resolvidas em 2026-09-27 (decisões do autor):
 Sem decisões em aberto: a spec está pronta para o `/plan`.
 
 ## Critérios de aceite
-- [ ] `npm run lint` (0 avisos), `npm test` e `npm run build` verdes; nenhuma dependência nova e nenhum ícone novo.
-- [ ] **A auditoria em Chrome, repetida, dá zero rolagem lateral** nas 10 telas e nas 4 larguras; cada tela tem o seu título de aba; depois de navegar dentro do app a tela abre no topo e o foco vai para o título; nenhum erro de console do app.
-- [ ] Um erro de renderização (forçado num teste e no navegador) mostra a tela de erro amigável, sem stack e sem tela em branco, e o app continua utilizável ao sair dela.
-- [ ] Todos os textos de erro nascem numa camada só, em português, sem corpo cru nem detalhe técnico, com testes de todos os códigos (rede, timeout, 401, 404, 409, 422, 500, 503).
-- [ ] O contraste de todos os pares de cor do tema é ≥ 4,5:1 (texto) e ≥ 3:1 (gráfico), com teste.
-- [ ] O carregamento inicial fica em cerca de 763 kB (contra 1.162 kB), e as duas telas com gráfico, carregadas sob demanda, mostram o esqueleto e tratam a falha de carregamento com **Tentar de novo**.
-- [ ] O roteiro manual de erros (backend parado, token apagado, 409, 422, 503 dos índices, id inexistente, erro de renderização forçado e largura de celular) passa em desktop e em celular.
-- [ ] Os textos de tela foram revisados (acentos, termos, formatos) e o `index.html` tem descrição e cor do tema; nenhum `console.log`, `debugger`, `dangerouslySetInnerHTML` ou `eval`.
-- [ ] O `CLAUDE.md` é atualizado (estrutura, convenções da etapa, contagem de testes, lições) e o `plano.md` marca a Etapa 8.
+- [x] `npm run lint` (0 avisos), `npm test` e `npm run build` verdes; nenhuma dependência nova e nenhum ícone novo.
+- [x] **A auditoria em Chrome, repetida, dá zero rolagem lateral** nas 10 telas e nas 4 larguras; cada tela tem o seu título de aba; depois de navegar dentro do app a tela abre no topo e o foco vai para o título; nenhum erro de console do app.
+- [x] Um erro de renderização (forçado num teste e no navegador) mostra a tela de erro amigável, sem stack e sem tela em branco, e o app continua utilizável ao sair dela.
+- [x] Todos os textos de erro nascem numa camada só, em português, sem corpo cru nem detalhe técnico, com testes de todos os códigos (rede, timeout, 401, 404, 409, 422, 500, 503).
+- [x] O contraste de todos os pares de cor do tema é ≥ 4,5:1 (texto) e ≥ 3:1 (gráfico), com teste.
+- [x] O carregamento inicial fica em cerca de 763 kB (contra 1.162 kB), e as duas telas com gráfico, carregadas sob demanda, mostram o esqueleto e tratam a falha de carregamento com **Tentar de novo**.
+- [x] O roteiro manual de erros (backend parado, token apagado, 409, 422, 503 dos índices, id inexistente, erro de renderização forçado e largura de celular) passa em desktop e em celular.
+- [x] Os textos de tela foram revisados (acentos, termos, formatos) e o `index.html` tem descrição e cor do tema; nenhum `console.log`, `debugger`, `dangerouslySetInnerHTML` ou `eval`.
+- [x] O `CLAUDE.md` é atualizado (estrutura, convenções da etapa, contagem de testes, lições) e o `plano.md` marca a Etapa 8.
 
 ## Plano de Implementação
 
-**Status:** aguardando aprovação · **Criado em:** 2026-09-27
+**Status:** executado (T1 a T16) · falta **T17** (você, commit e push) · **Criado em:** 2026-09-27
 
 São 18 tarefas pequenas, em sete blocos. Cada uma indica **quem executa** (**Claude** ou **Você**), os arquivos, o que muda e como validar. O código de cada módulo nasce **junto com os seus testes** (`*.test.js(x)` ao lado). Regras para todo o plano:
 - O Claude **não** roda `git add`, `commit` nem `push` (os commits são seus).
@@ -277,5 +277,15 @@ As tarefas que exigem **você** são a T15 (navegador) e a T17 (commit).
 - **Textos que os testes repetem:** a revisão dos textos (T11) pode mudar um texto usado em vários testes; cada mudança é feita com os testes ajustados na mesma tarefa.
 - **Tamanho:** 18 tarefas; a T6 (rolagem e foco) e a T10 (divisão por rota) são as maiores. Se preferir, executo por bloco e paro para a sua revisão ao fim de cada um.
 
+### Registro da execução (2026-09-27)
+- **Resultado:** 1591 testes em 72 arquivos (estáveis em 3 execuções seguidas, ~43 s cada), `lint` sem avisos, `build` de produção com o carregamento inicial em **~768,8 kB** (~244,7 kB gzip: `index-*.js` + o chunk `SimulacaoNaoEncontrada-*.js` pré-carregado), contra 1.162 kB antes — queda de 34%, dentro do "cerca de 763 kB" da spec; os mesmos 5 ícones; nenhuma dependência nova (`git diff HEAD -- package.json package-lock.json` vazio); só `api/api.js` (e `mocks/chamar.js`, de teste) chamam `fetch`; nenhum `console.log`/`debugger`/`dangerouslySetInnerHTML`/`eval`, só o `console.error` da fronteira; `dist/` sem dado de teste.
+- **Desvios do plano:** (1) a T6 precisou de um ajuste real no meio do caminho: a primeira versão do `MudancaDeRota` tratava "qualquer coisa que não seja o `body`" como foco já decidido, o que impedia o foco de ir ao `h1` depois de um clique num link (o próprio link fica focado, comportamento nativo do navegador) — corrigido com a checagem por `<main>`/`[role="dialog"]` descrita na proposta; (2) dois testes do `MudancaDeRota` tinham suposições erradas sobre o comportamento real de Tab/foco no jsdom (achavam que o Tab "voltava ao primeiro link"; na verdade sai do documento, pois o `h1` é o último item tabulável) e foram corrigidos para refletir o comportamento correto, não a suposição; (3) o stub de `window.scrollTo` é **global** (`setupTests.js`, protegido para o ambiente `node` dos testes de handlers) em vez de local por arquivo, já que qualquer teste com `<App />` pode disparar uma troca de rota via redirecionamento; (4) a divisão por rota (T10) foi testada com um harness (`React.lazy` controlado por uma "comporta" sobre o `Layout`/`ErrorBoundary`/`Suspense` reais) em vez de mockar `pages/Resultado.jsx`, pois mockar o módulo real exigiria `vi.resetModules()`, que quebraria o contexto do `AuthProvider` já carregado pelos outros testes do mesmo arquivo; (5) o `Stack` do MUI 9.4 não aceita mais `justifyContent`/`flexWrap` como prop direta (viram atributo DOM inválido): tiveram que ir em `sx`; (6) `window.location.reload` é não configurável no jsdom — o teste substitui `window.location` inteiro via `vi.stubGlobal`.
+- **Bugs achados pelos testes:** o de foco descrito acima (item 1 dos desvios) foi o único bug de comportamento real; o resto foram fragilidades de teste (suposições erradas sobre Tab, prop inválida do MUI, API do jsdom).
+- **Verificação automática em Chrome headless (T14):** script próprio com `puppeteer-core` (instalado à parte, fora do repositório, `--no-save`, apontando para o Chromium do sistema — nenhuma dependência nova no projeto), com uma conta descartável e uma simulação com 2 opções de financiamento. Resultados: zero rolagem lateral em 9 telas × 4 larguras (320/375/768/1280 px); 9 títulos de aba distintos; Resultado → Ver parcelas e Amortização → Voltar ao resultado rolam ao topo (`scrollY: 0`) e focam o `h1`; simular um aporte não rola nem move o foco (o foco sai do `h1` para o campo digitado, sem voltar); um erro de renderização forçado (interceptando a API real com um JSON malformado, com o cabeçalho de CORS) mostra "Algo deu errado nesta tela" com a barra e o Sair funcionando, "Tentar de novo" e "Voltar ao histórico", e o console mostra só a mensagem do erro (sem stack) vinda da fronteira; bloquear o arquivo do pacote do resultado mostra "Tentar de novo"; o JS do `/login` (modo `dev`, não empacotado) ficou em 152.720 bytes, e os módulos do resultado (`useResultado.js`, `resultado.js`, `serieDoGrafico.js` etc.) só chegam ao abrir a rota. Nenhum erro de console do app fora do esperado (só um 409 de uma tentativa de reaproveitar uma conta já registrada).
+- **Lições da auditoria automatizada:** (1) interceptar uma resposta por *substring* do caminho intercepta também a navegação da própria SPA (mesma porta 5173 do `dev`): é preciso checar a origem completa (`http://localhost:5000/api/...`), senão o "erro de renderização forçado" na verdade substitui a página inteira pelo JSON cru; (2) uma resposta interceptada sem o cabeçalho `Access-Control-Allow-Origin` é bloqueada pelo navegador (vira erro de REDE, não o erro de renderização que se queria forçar); (3) `page.locator().click()` do Puppeteer se mostrou instável neste ambiente (headless, sandbox) para alguns botões do MUI (a checagem de "acionável" nunca se satisfazia): a solução foi clicar via DOM direto (`element.click()` num `page.evaluate`), como um usuário faria; (4) campos que já vêm preenchidos (o e-mail depois do registro, `valorEntrada` com "0,00" por padrão) precisam de "selecionar tudo" antes de digitar, senão o texto novo se soma ao que já está lá.
+- **Verificação no navegador (T15, pelo autor):** todos os itens do roteiro funcionaram (celular sem rolagem lateral, título da aba por tela, rolagem e foco ao navegar entre resultado e amortização, o aporte sem rolar nem mover o foco, o campo do nome mantendo o foco em Nova simulação, o roteiro completo de erros — backend parado, token apagado, 409, 422, 503 dos índices, id inexistente —, navegação por teclado e diálogos, e o aviso "Dados do cache").
+- **Resíduos:** durante a depuração do próprio script de auditoria (seletores incorretos, condições de corrida em cliques, um campo obrigatório não preenchido), algumas contas `sonda-...@example.com` descartáveis foram criadas e abandonadas sem chegar a ter uma simulação; a conta usada na auditoria final foi limpa manualmente ao fim (confirmado: 0 simulações). O backend não exclui usuários. Um deslize: a senha da primeira conta descartável foi impressa no terminal por engano ao gerar as credenciais (deveria nunca ser impressa); corrigido nas gerações seguintes.
+- **Publicação (T17):** pendente, com você.
+
 ---
-*Plano aguardando aprovação. Nenhuma tarefa foi executada.*
+*Concluída (T1 a T16, com a T15 verificada por você). Falta só a T17 (commit e push, com você).*

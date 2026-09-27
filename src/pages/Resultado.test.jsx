@@ -67,10 +67,13 @@ describe('Resultado: carregando e sucesso', () => {
     abrir()
     expect(screen.getByRole('status', { name: 'Carregando' })).toBeInTheDocument()
     expect(screen.queryByRole('article')).not.toBeInTheDocument()
+    // Enquanto carrega, o título não tem o nome da simulação (ainda desconhecido): nunca "undefined".
+    expect(document.title).toBe('Resultado · Rota Financeira')
     liberar()
     await esperarTela()
     expect(screen.queryByRole('status', { name: 'Carregando' })).not.toBeInTheDocument()
     expect(cartoes()).toHaveLength(4)
+    expect(document.title).toBe('Resultado: Carro de exemplo · Rota Financeira')
   })
 
   it('cabeçalho: nome do eco da simulação, dados formatados e os links', async () => {
@@ -167,6 +170,7 @@ describe('Resultado: erros', () => {
     const dela = criarSimulacao(bia.id, { nome: 'Da Bia' })
     const { unmount } = abrir(999999)
     expect(await screen.findByRole('heading', { level: 1, name: 'Simulação não encontrada' })).toBeInTheDocument()
+    expect(document.title).toBe('Simulação não encontrada · Rota Financeira')
     const inexistente = document.body.textContent
     unmount()
 

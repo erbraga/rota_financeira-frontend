@@ -50,6 +50,7 @@ describe('Simulacoes: carregando, lista e vazio', () => {
     expect(screen.getByRole('status', { name: 'Carregando' })).toBeInTheDocument()
     expect(await screen.findByRole('heading', { level: 2, name: 'Onix' })).toBeInTheDocument()
     expect(screen.queryByRole('status', { name: 'Carregando' })).not.toBeInTheDocument()
+    expect(document.title).toBe('Minhas simulações · Rota Financeira')
   })
 
   it('lista do mais recente ao mais antigo, com valores em reais e a data', async () => {

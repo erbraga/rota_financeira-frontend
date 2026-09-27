@@ -3,6 +3,7 @@ import Typography from '@mui/material/Typography'
 import { useTheme } from '@mui/material/styles'
 import { useId, useMemo } from 'react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { SO_PARA_LEITOR_DE_TELA } from '../estilos.js'
 import { formatarMoeda, formatarMoedaCompacta } from '../utils/formatar.js'
 import {
   CHAVE_AMORTIZACAO,
@@ -12,19 +13,6 @@ import {
   NOME_DOS_JUROS,
   resumoDaAmortizacao,
 } from '../utils/serieDaAmortizacao.js'
-
-// Só o leitor de tela lê: o resumo em texto do que o gráfico desenha.
-const SO_PARA_LEITOR_DE_TELA = {
-  position: 'absolute',
-  width: 1,
-  height: 1,
-  m: -1,
-  p: 0,
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-  border: 0,
-}
 
 // A amostra de uma fatia na legenda (mesma cor/padrão das barras): cheia para a amortização, listrada para os juros.
 function Amostra({ cor, idDoPadrao }) {
@@ -69,7 +57,7 @@ export default function GraficoAmortizacao({ parcelas }) {
         </Box>
       </Box>
 
-      <Box component="figure" aria-labelledby={idDoTitulo} aria-describedby={idDoResumo} sx={{ m: 0 }}>
+      <Box component="figure" aria-labelledby={idDoTitulo} aria-describedby={idDoResumo} sx={{ m: 0, position: 'relative' }}>
         <Typography id={idDoResumo} component="p" sx={SO_PARA_LEITOR_DE_TELA}>
           {`Gráfico de barras empilhadas, do mês ${dados[0]?.mes} ao mês ${dados.at(-1)?.mes}, em reais: cada barra é uma parcela, dividida em amortização e juros. ${resumo}`}
         </Typography>

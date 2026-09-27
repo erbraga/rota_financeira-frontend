@@ -103,6 +103,7 @@ describe('SimulacaoForm: nova simulação', () => {
     expect(campo(R.entrada)).toHaveValue('0,00')
     expect(screen.getByRole('link', { name: 'Cancelar' })).toHaveAttribute('href', '/simulacoes')
     expect(screen.getByRole('button', { name: 'Criar simulação' })).toBeInTheDocument()
+    expect(document.title).toBe('Nova simulação · Rota Financeira')
   })
 
   it('criar: envia o corpo exato, vai para a EDIÇÃO da nova simulação COM REPLACE e mostra "Simulação criada."', async () => {
@@ -207,6 +208,8 @@ describe('SimulacaoForm: editar', () => {
     const s = nova()
     abrir(`/simulacoes/${s.id}/editar`)
     expect(screen.getByRole('status', { name: 'Carregando' })).toBeInTheDocument()
+    // Sem nome dinâmico nesta tela: o título já é "Editar simulação" mesmo enquanto carrega.
+    expect(document.title).toBe('Editar simulação · Rota Financeira')
     expect(await screen.findByRole('heading', { level: 1, name: 'Editar simulação' })).toBeInTheDocument()
     expect(campo(R.nome)).toHaveValue('Onix')
     expect(campo(R.veiculo)).toHaveValue('95.000,00')
@@ -308,6 +311,7 @@ describe('SimulacaoForm: não encontrada e erros ao carregar', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Simulação não encontrada' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Voltar ao histórico' })).toHaveAttribute('href', '/simulacoes')
     expect(screen.queryByLabelText(R.nome)).not.toBeInTheDocument()
+    expect(document.title).toBe('Simulação não encontrada · Rota Financeira')
   })
 
   it('a simulação de OUTRA pessoa mostra exatamente o mesmo estado (não vaza que ela existe)', async () => {

@@ -82,6 +82,7 @@ describe('Login: formulário', () => {
     expect(campoSenha()).toHaveAttribute('type', 'password')
     expect(botaoEntrar()).toBeEnabled()
     expect(screen.getByRole('link', { name: 'Criar conta' })).toHaveAttribute('href', '/registrar')
+    expect(document.title).toBe('Entrar · Rota Financeira')
   })
 
   it('o foco começa no e-mail', () => {

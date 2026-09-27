@@ -12,6 +12,7 @@ import { ehErroApi } from '../api/erros.js'
 import { useAuth } from '../auth/useAuth.js'
 import CampoSenha from '../components/CampoSenha.jsx'
 import { useRegistrar } from '../hooks/useRegistrar.js'
+import { useTituloDaPagina } from '../hooks/useTituloDaPagina.js'
 import { esquemaRegistro } from '../schemas/auth.js'
 import { aplicarErrosDoServidor } from '../utils/errosDeFormulario.js'
 
@@ -19,6 +20,7 @@ import { aplicarErrosDoServidor } from '../utils/errosDeFormulario.js'
 const CAMPOS_DO_SERVIDOR = ['nome', 'email', 'senha']
 
 export default function Registro() {
+  useTituloDaPagina('Criar conta')
   const navigate = useNavigate()
   const { limparAviso } = useAuth()
   const registrar = useRegistrar()

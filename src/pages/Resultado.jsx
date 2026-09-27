@@ -10,8 +10,9 @@ import ControleAporte from '../components/ControleAporte.jsx'
 import EsqueletoLista from '../components/EsqueletoLista.jsx'
 import EstadoErro from '../components/EstadoErro.jsx'
 import GraficoComparativo from '../components/GraficoComparativo.jsx'
-import SimulacaoNaoEncontrada from '../components/SimulacaoNaoEncontrada.jsx'
+import SimulacaoNaoEncontrada, { TITULO_SIMULACAO_NAO_ENCONTRADA } from '../components/SimulacaoNaoEncontrada.jsx'
 import { useResultado } from '../hooks/useResultado.js'
+import { useTituloDaPagina } from '../hooks/useTituloDaPagina.js'
 import { aporteParaUrl, lerAporteDaUrl, PARAMETRO_DO_APORTE } from '../utils/aporteNaUrl.js'
 import { formatarMoeda, formatarPercentual, formatarPrazo } from '../utils/formatar.js'
 import { mensagemDeErro } from '../utils/mensagemDeErro.js'
@@ -88,9 +89,19 @@ export default function Resultado() {
     />
   )
 
-  if (consulta.isPending) return <EsqueletoResultado />
   // Inexistente, de outra pessoa ou excluída: o mesmo 404, o mesmo estado (não vaza existência).
-  if (consulta.isError && ehErroApi(consulta.error) && consulta.error.status === 404) return <SimulacaoNaoEncontrada />
+  const naoEncontrada = consulta.isError && ehErroApi(consulta.error) && consulta.error.status === 404
+  // Enquanto carrega (ou num erro sem nome ainda conhecido) o título fica sem o nome da simulação, nunca "undefined".
+  useTituloDaPagina(
+    naoEncontrada
+      ? TITULO_SIMULACAO_NAO_ENCONTRADA
+      : consulta.data
+        ? `Resultado: ${consulta.data.simulacao.nome}`
+        : 'Resultado',
+  )
+
+  if (consulta.isPending) return <EsqueletoResultado />
+  if (naoEncontrada) return <SimulacaoNaoEncontrada />
   if (consulta.isError) {
     return (
       <EstadoErro

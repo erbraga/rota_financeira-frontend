@@ -11,11 +11,12 @@ import { useAviso } from '../avisos/useAviso.js'
 import EstadoErro from '../components/EstadoErro.jsx'
 import FormularioSimulacao from '../components/FormularioSimulacao.jsx'
 import SecaoFinanciamentos from '../components/SecaoFinanciamentos.jsx'
-import SimulacaoNaoEncontrada from '../components/SimulacaoNaoEncontrada.jsx'
+import SimulacaoNaoEncontrada, { TITULO_SIMULACAO_NAO_ENCONTRADA } from '../components/SimulacaoNaoEncontrada.jsx'
 import { useAtualizarSimulacao } from '../hooks/useAtualizarSimulacao.js'
 import { useCriarSimulacao } from '../hooks/useCriarSimulacao.js'
 import { useIndice } from '../hooks/useIndice.js'
 import { useSimulacao } from '../hooks/useSimulacao.js'
+import { useTituloDaPagina } from '../hooks/useTituloDaPagina.js'
 import { deSimulacaoParaForm, valoresIniciais } from '../schemas/simulacao.js'
 import { mensagemDeErro } from '../utils/mensagemDeErro.js'
 
@@ -38,6 +39,7 @@ function Cabecalho({ titulo }) {
 // /simulacoes/nova: cria (POST) e vai para a EDIÇÃO da nova simulação (é onde as opções de financiamento entram na
 // Etapa 5). A navegação é "replace": o Voltar do navegador não volta ao formulário de criação (e não reenvia).
 function NovaSimulacao() {
+  useTituloDaPagina('Nova simulação')
   const criar = useCriarSimulacao()
   const navigate = useNavigate()
   const { mostrarAviso } = useAviso()
@@ -93,11 +95,11 @@ function EditarSimulacao({ id }) {
   const { mostrarAviso } = useAviso()
   // Um 404 no PUT (excluída em outro lugar) mostra o mesmo estado de "não encontrada".
   const [sumiu, setSumiu] = useState(false)
+  const naoEncontrada = sumiu || (consulta.isError && ehErroApi(consulta.error) && consulta.error.status === 404)
+  useTituloDaPagina(naoEncontrada ? TITULO_SIMULACAO_NAO_ENCONTRADA : 'Editar simulação')
 
   if (consulta.isPending) return <EsqueletoFormulario />
-  if (sumiu || (consulta.isError && ehErroApi(consulta.error) && consulta.error.status === 404)) {
-    return <SimulacaoNaoEncontrada />
-  }
+  if (naoEncontrada) return <SimulacaoNaoEncontrada />
   if (consulta.isError) {
     return (
       <EstadoErro

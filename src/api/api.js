@@ -1,33 +1,10 @@
 // Client HTTP centralizado. É o único módulo que conhece a URL da API, o token e o tratamento de 401.
 import { lerConfig } from '../config.js'
+import { mensagemGenericaPorStatus } from '../utils/textosDeErro.js'
 import { ErroApi, ErroRede } from './erros.js'
 
 // O backend espera até 8 s pelo Banco Central (índices); 15 s cobre isso com folga.
 export const TIMEOUT_PADRAO_MS = 15_000
-
-// Mensagens usadas só quando o servidor não devolve o JSON { erro } esperado (ex.: página de erro de um proxy).
-const MENSAGENS_GENERICAS = {
-  400: 'Requisição inválida.',
-  401: 'Sessão inválida ou expirada.',
-  403: 'Acesso negado.',
-  404: 'Recurso não encontrado.',
-  409: 'A operação conflita com o estado atual.',
-  415: 'Formato de requisição não aceito.',
-  422: 'Dados inválidos.',
-  500: 'Erro interno do servidor.',
-  502: 'Servidor indisponível no momento.',
-  503: 'Servidor indisponível no momento.',
-  504: 'Servidor indisponível no momento.',
-}
-
-function mensagemGenerica(status) {
-  return (
-    MENSAGENS_GENERICAS[status] ??
-    (status >= 500
-      ? 'Erro no servidor. Tente novamente mais tarde.'
-      : 'Não foi possível concluir a requisição.')
-  )
-}
 
 // Interpreta o texto do corpo como JSON; devolve undefined se estiver vazio ou não for JSON válido.
 function lerJson(texto) {
@@ -107,7 +84,7 @@ export async function requisicao(
 
   throw new ErroApi({
     status: resposta.status,
-    erro: ehObjeto(dados) && typeof dados.erro === 'string' ? dados.erro : mensagemGenerica(resposta.status),
+    erro: ehObjeto(dados) && typeof dados.erro === 'string' ? dados.erro : mensagemGenericaPorStatus(resposta.status),
     detalhes: ehObjeto(dados) && ehObjeto(dados.detalhes) ? dados.detalhes : undefined,
   })
 }
